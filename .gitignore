@@ -1,0 +1,19 @@
+# Build outputs
+build/
+out/
+dist/
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+*.dylib
+
+# Local editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# LeetCode extension local metadata
+src/.lcpr_data/

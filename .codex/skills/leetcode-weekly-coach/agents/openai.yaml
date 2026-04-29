@@ -1,4 +1,4 @@
 interface:
   display_name: "LeetCode 周计划教练"
-  short_description: "按主题出题并中文点评题解"
-  default_prompt: "使用 $leetcode-weekly-coach 用中文制定本周 LeetCode 计划，并在我提交题解后生成中文评价文档。"
+  short_description: "联网校准题目信息并生成单题点评"
+  default_prompt: "使用 $leetcode-weekly-coach 用中文制定本周 LeetCode 计划；需要时联网校准题目信息，并在我提交题解后为每道题生成独立点评文档、指出问题、给出最优解法和 C++20 最优解代码。"

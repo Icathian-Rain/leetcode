@@ -154,6 +154,7 @@
 ```cpp
 class Solution {
 public:
+    // 中文注释说明关键不变量、边界处理或容易误解的步骤
     // ...
 };
 ```
@@ -188,6 +189,7 @@ public:
 ```cpp
 class Solution {
     int removeDuplicatesOpt(vector<int>& nums) {
+        // 中文注释说明最优解的关键不变量或边界处理
         // 最优解实现
     }
 

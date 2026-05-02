@@ -14,13 +14,19 @@ class Solution {
 public:
     int maxArea(vector<int>& height) {
         int n=height.size();
+
+        int left=0;
+        int right=n-1;
         int ans = 0;
-        for(int i=0, j=n-1; i<j; ) {
-            ans = max(ans, min(height[i], height[j])*(j-i));
-            if(height[i] < height[j]) {
-                i++;
+
+        while(left<right) {
+            int width = right-left;
+            int boundedHeight = min(height[left], height[right]);
+            ans=max(ans, width*boundedHeight);
+            if(height[left] < height[right]) {
+                left++;
             } else {
-                j--;
+                right--;
             }
         }
         return ans;

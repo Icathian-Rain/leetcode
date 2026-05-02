@@ -33,17 +33,23 @@ class Solution {
 public:
     bool isPalindrome(string s) {
         int n=s.length();
-        for(int i=0, j=n-1; i<j; i++, j--) {
-            while(i < j && !isValid(s[i])) {
-                i++;
+        int left=0;
+        int right=n-1;
+        while(left<right) {
+            while(left<right && !isValid(s[left])) {
+                left++;
             }
-            while(j > i && !isValid(s[j])) {
-                j--;
+            while(left<right && !isValid(s[right])) {
+                right--;
             }
-            if(lower(s[i]) != lower(s[j])) {
+            if(lower(s[left]) != lower(s[right])) {
                 return false;
             }
+            left++;
+            right--;
         }
+
+
         return true;
     }
 };

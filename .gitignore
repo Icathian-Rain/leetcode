@@ -17,3 +17,5 @@ Thumbs.db
 
 # LeetCode extension local metadata
 src/.lcpr_data/
+
+.opencode/

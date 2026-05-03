@@ -109,3 +109,62 @@
 
 - 暴露问题：加练题整体延续了第 2 天的原地写入能力；`88` 的分支覆盖完整，但还可以利用“剩余 `nums1` 已在原位”来让控制流更紧。
 - 下一步安排：保持进入第 3 天组合类数组题的节奏，同时把“从后往前写避免覆盖”作为后续有序数组题的可迁移经验。
+
+## 进度更新 - 2026-05-03
+
+- 今日完成：`15. 3Sum`、`16. 3Sum Closest`、`18. 4Sum`
+- 当前主题：第 3 天 - 排序去重与组合搜索
+
+### 通用解题模板
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> kSumLike(vector<int>& nums, int target) {
+        sort(nums.begin(), nums.end());
+        vector<vector<int>> ans;
+
+        // 组合类双指针题通常先固定前若干位。
+        for (int first = 0; first + 2 < (int)nums.size(); ++first) {
+            if (first > 0 && nums[first] == nums[first - 1]) {
+                continue;
+            }
+
+            int left = first + 1;
+            int right = (int)nums.size() - 1;
+            while (left < right) {
+                long long sum = (long long)nums[first] + nums[left] + nums[right];
+                if (sum < target) {
+                    ++left;
+                } else if (sum > target) {
+                    --right;
+                } else {
+                    ans.push_back({nums[first], nums[left], nums[right]});
+                    // 命中一个组合后，跳过两侧重复值，防止重复答案。
+                    while (left < right && nums[left] == nums[left + 1]) {
+                        ++left;
+                    }
+                    while (left < right && nums[right] == nums[right - 1]) {
+                        --right;
+                    }
+                    ++left;
+                    --right;
+                }
+            }
+        }
+
+        return ans;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `15. 3Sum` | 待提交验证，源码逻辑检查通过 | 排序、固定首位、左右收缩和三处去重都完整，已经抓住组合搜索的核心节奏。 | 外层边界可以更精确地写成还剩两个数；复盘时重点说明每次指针移动的依据。 | [查看](../leetcode-reviews/2026-05-03-15-3sum.md) |
+| `16. 3Sum Closest` | 待提交验证，源码逻辑检查通过 | 能把精确命中题迁移到“维护最接近答案”，并保留提前返回。 | `ans = 1e7` 属于哨兵值，推荐用真实三元组初始化；答案更新时机可以前置到移动指针之前。 | [查看](../leetcode-reviews/2026-05-03-16-3sum-closest.md) |
+| `18. 4Sum` | 待提交验证，源码逻辑检查通过 | 两层固定加左右指针的整体模板正确，固定层和命中后的去重都处理到了。 | 类型提升可以更早写成 `(long long)nums[a] + nums[b]`；四数题还要复盘上下界剪枝。 | [查看](../leetcode-reviews/2026-05-03-18-4sum.md) |
+
+- 暴露问题：今天的主线完成得很扎实，已经能把“排序后固定若干位，再用左右指针收缩”的模式迁移到三数、最接近三数和四数；主要风险集中在循环边界表达、答案初始化的稳健性，以及 `4Sum` 类型提升和剪枝边界的模板化。
+- 下一步安排：进入第 4 天可变窗口入门，重点从“组合搜索的去重边界”切换到“窗口是否合法、何时收缩左边界”的判断。

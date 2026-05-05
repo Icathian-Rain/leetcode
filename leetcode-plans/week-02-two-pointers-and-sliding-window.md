@@ -4,7 +4,7 @@
 
 学会用两个可解释的指针缩小搜索空间：在有序数组里用左右指针排除不可能答案，在原地数组题里用快慢指针维护可写区域，在字符串和子数组题里用滑动窗口维护“当前窗口是否合法”。到本周结束时，你应该能先说清楚指针移动的依据，再写代码，而不是靠样例试探。
 
-当前进度：已完成第 4 天训练。下一步进入第 5 天固定窗口与频次窗口。
+当前进度：已完成第 5 天训练。下一步进入第 6 天覆盖需求与窗口收缩。
 
 资料校准：题号、英文题名和难度已按 LeetCode Wiki 题页校准；查询日期：2026-05-01。
 
@@ -216,3 +216,65 @@ public:
 
 - 暴露问题：今天整体已经抓住可变窗口的核心节奏；主要需要继续强化三件事：窗口合法性的口头定义、答案更新是在收缩前还是收缩后、计数状态归零后的清理。
 - 下一步安排：进入第 5 天固定窗口与频次窗口，重点观察窗口长度固定后，状态比较和结果记录时机如何变化。
+
+## 进度更新 - 2026-05-05
+
+- 今日完成：`438. Find All Anagrams in a String`、`567. Permutation in String`、`424. Longest Repeating Character Replacement`
+- 当前主题：第 5 天 - 固定窗口与频次窗口
+
+### 通用解题模板
+
+- 适用条件：题目要求比较一个连续窗口与目标频次是否一致，或要求在窗口中根据字符频次判断当前长度是否合法。
+- 核心骨架：用固定大小数组维护窗口频次或频次差值；右端加入新字符，窗口超长时移出左端；用一个聚合状态避免每轮重新比较整张频次表。
+- 关键边界：固定窗口题必须等窗口长度达到目标长度后再判断；差值为 `0` 的种类变化要在每次加减前后同步更新；最长窗口题要说清最高频状态是否需要回退。
+- 复杂度：时间 `O(n)`，空间 `O(1)`，其中字符集大小固定为 26。
+
+```cpp
+class Solution {
+public:
+    bool fixedFrequencyWindow(string target, string text) {
+        vector<int> diff(26, 0);
+        int different = 0;
+
+        auto addDiff = [&](int idx, int delta) {
+            int before = diff[idx];
+            int after = before + delta;
+            if (before == 0 && after != 0) {
+                ++different;
+            } else if (before != 0 && after == 0) {
+                --different;
+            }
+            diff[idx] = after;
+        };
+
+        for (char ch : target) {
+            addDiff(ch - 'a', 1);
+        }
+
+        int windowSize = target.size();
+        for (int right = 0; right < (int)text.size(); ++right) {
+            addDiff(text[right] - 'a', -1);
+            if (right >= windowSize) {
+                // 固定窗口只保留和目标串等长的字符。
+                addDiff(text[right - windowSize] - 'a', 1);
+            }
+            if (right + 1 >= windowSize && different == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `438. Find All Anagrams in a String` | 待提交验证，源码逻辑检查通过 | 用 `cnt + num` 维护频次差值，能在常数时间判断固定窗口是否匹配。 | `num` 的增减依赖差值跨过 `0` 的瞬间，复盘时要把正数、零、负数三种含义讲清。 | [查看](../leetcode-reviews/2026-05-05-438-find-all-anagrams-in-a-string.md) |
+| `567. Permutation in String` | 待提交验证，源码逻辑检查通过 | 很好地迁移了 `438` 的固定窗口模板，并把记录所有答案改成命中即返回。 | 建议显式处理 `s1` 长于 `s2` 的边界，提升代码表达稳定性。 | [查看](../leetcode-reviews/2026-05-05-567-permutation-in-string.md) |
+| `424. Longest Repeating Character Replacement` | 待提交验证，源码逻辑检查通过 | 能用窗口长度和最高频字符数判断替换次数是否超限，代码达到常见最优复杂度。 | 重点复盘 `maxCnt` 不随左边界回退的正确性，以及为什么超限时移动一次左边界即可。 | [查看](../leetcode-reviews/2026-05-05-424-longest-repeating-character-replacement.md) |
+
+- 暴露问题：今天频次窗口迁移做得很好，`438` 和 `567` 已经形成同一套差值模板；主要复盘点是把 `num/different` 的语义讲成“差值不为零的字符种类数”，以及理解 `424` 中历史最高频不回退的原因。
+- 下一步安排：进入第 6 天覆盖需求与窗口收缩，重点从“窗口是否等长匹配”切换到“什么时候已经满足需求、满足后如何尽量缩短或计数”。

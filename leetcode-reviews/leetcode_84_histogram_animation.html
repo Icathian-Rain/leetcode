@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leetcode 84 单调栈动画讲解</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --blue: #3b82f6;
+      --green: #22c55e;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --purple: #8b5cf6;
+      --border: #e5e7eb;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, #e0f2fe 0, transparent 32%), var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 28px;
+    }
+
+    .app { width: min(1180px, 100%); }
+
+    header { margin-bottom: 20px; }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.75fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      backdrop-filter: blur(10px);
+    }
+
+    .histogram-wrap {
+      min-height: 430px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .input-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 16px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+    }
+
+    .input-panel label {
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .array-input {
+      flex: 1 1 260px;
+      min-width: 0;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+      background: white;
+    }
+
+    .array-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    }
+
+    .error-msg {
+      flex-basis: 100%;
+      color: #dc2626;
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    .test-msg {
+      flex-basis: 100%;
+      color: #16a34a;
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    .chart {
+      height: 330px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 14px;
+      padding: 20px 12px 0;
+      border-bottom: 3px solid #cbd5e1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar-group {
+      width: 62px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      position: relative;
+    }
+
+    .bar {
+      width: 52px;
+      border-radius: 12px 12px 4px 4px;
+      background: linear-gradient(180deg, #93c5fd, #3b82f6);
+      border: 2px solid #1d4ed8;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      padding-top: 8px;
+      transition: height 0.45s ease, background 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .bar.sentinel {
+      background: linear-gradient(180deg, #e5e7eb, #cbd5e1);
+      border-color: #94a3b8;
+      color: #475569;
+    }
+
+    .bar.current {
+      background: linear-gradient(180deg, #fbbf24, #f59e0b);
+      border-color: #b45309;
+      transform: translateY(-8px);
+    }
+
+    .bar.stack {
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.24);
+      border-color: #16a34a;
+    }
+
+    .bar.popped {
+      background: linear-gradient(180deg, #fca5a5, #ef4444);
+      border-color: #b91c1c;
+      transform: translateY(-14px) scale(1.04);
+    }
+
+    .bar.in-rect {
+      background: linear-gradient(180deg, #c4b5fd, #8b5cf6);
+      border-color: #6d28d9;
+    }
+
+    .index {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .pointer {
+      position: absolute;
+      top: -28px;
+      font-size: 24px;
+      color: var(--orange);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .bar-group.current .pointer { opacity: 1; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+    .dot.orange { background: var(--orange); }
+    .dot.green { background: var(--green); }
+    .dot.red { background: var(--red); }
+    .dot.purple { background: var(--purple); }
+
+    .side { display: flex; flex-direction: column; gap: 16px; }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .status {
+      min-height: 118px;
+      padding: 16px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .status strong { color: #111827; }
+
+    .formula {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #111827;
+      color: #f9fafb;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .stack-box {
+      min-height: 145px;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+    }
+
+    .stack-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 12px;
+      border-radius: 12px;
+      background: #dcfce7;
+      border: 1px solid #86efac;
+      font-weight: 700;
+      animation: popIn 0.22s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .answer {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .metric {
+      padding: 14px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .metric .value {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 10px 15px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #fff;
+      background: #111827;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button.secondary { background: #e5e7eb; color: #111827; }
+    button:disabled { opacity: 0.42; cursor: not-allowed; transform: none; }
+
+    .speed {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    input[type="range"] { width: 130px; }
+
+    .code-card pre {
+      margin: 0;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 14px;
+      border-radius: 16px;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    .highlight-line {
+      background: rgba(251, 191, 36, 0.18);
+      display: block;
+      margin: 0 -8px;
+      padding: 0 8px;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 900px) {
+      body { padding: 16px; }
+      .grid { grid-template-columns: 1fr; }
+      .bar-group { width: 44px; }
+      .bar { width: 38px; }
+      .chart { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Leetcode 84：柱状图最大矩形 · 单调栈动画</h1>
+      <p class="subtitle">
+        输入任意柱子高度数组，例如 <code>[2,1,5,6,2,3]</code> 或 <code>2,1,5,6,2,3</code>。
+        动画会自动演示：扫描到更矮柱子时，为什么可以弹栈并计算面积。
+      </p>
+    </header>
+
+    <section class="grid">
+      <div class="card histogram-wrap">
+        <div class="input-panel">
+          <label for="arrayInput">heights</label>
+          <input id="arrayInput" class="array-input" value="[2,1,5,6,2,3]" placeholder="例如：[2,1,5,6,2,3] 或 2,1,5,6,2,3" />
+          <button id="applyInputBtn" type="button">生成动画</button>
+          <button id="randomBtn" type="button" class="secondary">随机数组</button>
+          <button id="testBtn" type="button" class="secondary">运行测试</button>
+          <div id="errorMsg" class="error-msg"></div>
+          <div id="testMsg" class="test-msg"></div>
+        </div>
+
+        <div class="chart" id="chart"></div>
+
+        <div>
+          <div class="legend">
+            <span class="chip"><span class="dot orange"></span>当前扫描柱子</span>
+            <span class="chip"><span class="dot green"></span>栈中柱子</span>
+            <span class="chip"><span class="dot red"></span>刚弹出的柱子</span>
+            <span class="chip"><span class="dot purple"></span>本次矩形覆盖范围</span>
+          </div>
+          <div class="controls">
+            <button id="prevBtn" type="button" class="secondary">上一步</button>
+            <button id="playBtn" type="button">播放</button>
+            <button id="nextBtn" type="button">下一步</button>
+            <button id="resetBtn" type="button" class="secondary">重置</button>
+            <div class="speed">
+              速度
+              <input id="speed" type="range" min="500" max="2200" value="1200" step="100" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="card">
+          <h2 class="section-title">当前步骤</h2>
+          <div class="status" id="status"></div>
+          <div class="formula" id="formula"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title">单调栈</h2>
+          <div class="stack-box" id="stackBox"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title">答案记录</h2>
+          <div class="answer">
+            <div class="metric">
+              <div class="label">当前最大面积</div>
+              <div class="value" id="maxArea">0</div>
+            </div>
+            <div class="metric">
+              <div class="label">动画步骤</div>
+              <div class="value" id="stepCount">1</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="card code-card" style="margin-top:20px;">
+      <h2 class="section-title">对应代码核心</h2>
+      <pre id="code"></pre>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var rawHeights = [2, 1, 5, 6, 2, 3];
+      var heights = [];
+      var originalIndex = [];
+      var maxH = 1;
+      var steps = [];
+      var currentStep = 0;
+      var timer = null;
+
+      var chart = document.getElementById("chart");
+      var stackBox = document.getElementById("stackBox");
+      var status = document.getElementById("status");
+      var formula = document.getElementById("formula");
+      var maxArea = document.getElementById("maxArea");
+      var stepCount = document.getElementById("stepCount");
+      var playBtn = document.getElementById("playBtn");
+      var prevBtn = document.getElementById("prevBtn");
+      var nextBtn = document.getElementById("nextBtn");
+      var resetBtn = document.getElementById("resetBtn");
+      var speed = document.getElementById("speed");
+      var code = document.getElementById("code");
+      var arrayInput = document.getElementById("arrayInput");
+      var applyInputBtn = document.getElementById("applyInputBtn");
+      var randomBtn = document.getElementById("randomBtn");
+      var testBtn = document.getElementById("testBtn");
+      var errorMsg = document.getElementById("errorMsg");
+      var testMsg = document.getElementById("testMsg");
+
+      var codeLines = [
+        "stack<int> st;",
+        "for (int i = 0; i < h.size(); i++) {",
+        "    while (!st.empty() && h[i] < h[st.top()]) {",
+        "        int cur = st.top(); st.pop();",
+        "        int left = st.top(), right = i;",
+        "        ans = max(ans, h[cur] * (right - left - 1));",
+        "    }",
+        "    st.push(i);",
+        "}"
+      ];
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function parseArrayInput(value) {
+        var trimmed = value.trim();
+        var arr;
+
+        if (!trimmed) {
+          throw new Error("请输入至少一个高度。例：[2,1,5,6,2,3]");
+        }
+
+        if (trimmed.charAt(0) === "[") {
+          try {
+            arr = JSON.parse(trimmed);
+          } catch (err) {
+            throw new Error("数组格式不正确。可以输入 [2,1,5,6,2,3] 或 2,1,5,6,2,3。");
+          }
+        } else {
+          arr = trimmed.split(/[，,\s]+/).filter(Boolean).map(Number);
+        }
+
+        if (!Array.isArray(arr)) {
+          throw new Error("请输入数组。例：[2,1,5,6,2,3]");
+        }
+        if (arr.length === 0) {
+          throw new Error("请输入至少一个高度。");
+        }
+        if (arr.length > 18) {
+          throw new Error("为了动画显示清楚，建议最多输入 18 个数。");
+        }
+        if (!arr.every(function (x) { return Number.isInteger(x) && x >= 0; })) {
+          throw new Error("高度必须是非负整数，例如 0、1、2、6。");
+        }
+        if (Math.max.apply(null, arr) > 50) {
+          throw new Error("为了动画比例清楚，高度建议不超过 50。");
+        }
+
+        return arr;
+      }
+
+      function getDisplayIndex(idx) {
+        return originalIndex[idx];
+      }
+
+      function calculateLargestRectangle(nums) {
+        var h = [0].concat(nums, [0]);
+        var st = [];
+        var ans = 0;
+
+        for (var i = 0; i < h.length; i++) {
+          while (st.length > 0 && h[i] < h[st[st.length - 1]]) {
+            var cur = st.pop();
+            var left = st[st.length - 1];
+            var width = i - left - 1;
+            ans = Math.max(ans, h[cur] * width);
+          }
+          st.push(i);
+        }
+
+        return ans;
+      }
+
+      function describePush(i, stackBefore) {
+        if (i === 0) {
+          return "加入左哨兵 0。它保证栈底永远有一个更小的柱子，后面计算 left 时不会空栈。";
+        }
+        if (i === heights.length - 1) {
+          return "右哨兵 0 入栈。它的主要作用是强制结算前面剩余的柱子。";
+        }
+        var top = stackBefore[stackBefore.length - 1];
+        return "当前高度 " + heights[i] + " 不小于栈顶高度 " + heights[top] + "，保持单调递增，直接入栈。";
+      }
+
+      function buildSteps(nums) {
+        rawHeights = nums.slice();
+        heights = [0].concat(nums, [0]);
+        originalIndex = ["L"].concat(nums.map(function (_, idx) { return idx; }), ["R"]);
+        maxH = Math.max.apply(null, heights.concat([1]));
+
+        var result = [];
+        var st = [];
+        var ans = 0;
+
+        for (var i = 0; i < heights.length; i++) {
+          while (st.length > 0 && heights[i] < heights[st[st.length - 1]]) {
+            var beforePop = st.slice();
+            var cur = st.pop();
+            var left = st[st.length - 1];
+            var right = i;
+            var width = right - left - 1;
+            var area = heights[cur] * width;
+            ans = Math.max(ans, area);
+
+            result.push({
+              i: i,
+              stack: beforePop,
+              type: "pop",
+              popped: cur,
+              rect: [left + 1, right - 1],
+              left: left,
+              right: right,
+              area: area,
+              text: "当前高度 " + heights[i] + " 小于栈顶高度 " + heights[cur] + "。说明下标 " + getDisplayIndex(cur) + " 的右边第一个更小元素找到了，就是当前 i = " + getDisplayIndex(i) + "。",
+              formula: [
+                "cur = " + getDisplayIndex(cur) + ", height = " + heights[cur],
+                "left = " + getDisplayIndex(left) + ", right = " + getDisplayIndex(right),
+                "width = " + right + " - " + left + " - 1 = " + width,
+                "area = " + heights[cur] + " * " + width + " = " + area
+              ].join("\n"),
+              line: 4,
+              max: ans
+            });
+          }
+
+          var beforePush = st.slice();
+          st.push(i);
+          result.push({
+            i: i,
+            stack: beforePush,
+            type: "push",
+            text: describePush(i, beforePush),
+            formula: [
+              "push i = " + getDisplayIndex(i),
+              "stack = [" + st.map(getDisplayIndex).join(", ") + "]"
+            ].join("\n"),
+            line: i === 0 ? 1 : 7,
+            max: ans
+          });
+        }
+
+        result.push({
+          i: heights.length - 1,
+          stack: st.slice(),
+          type: "done",
+          text: "所有柱子结算完成。最大面积是 " + ans + "。",
+          formula: "answer = " + ans,
+          line: 8,
+          max: ans
+        });
+
+        return result;
+      }
+
+      function renderChart(step) {
+        chart.innerHTML = "";
+        var stackSet = new Set(step.stack || []);
+        var rectStart = step.rect ? step.rect[0] : -1;
+        var rectEnd = step.rect ? step.rect[1] : -1;
+
+        heights.forEach(function (h, idx) {
+          var group = document.createElement("div");
+          group.className = "bar-group" + (idx === step.i ? " current" : "");
+
+          var pointer = document.createElement("div");
+          pointer.className = "pointer";
+          pointer.textContent = "▼";
+          group.appendChild(pointer);
+
+          var bar = document.createElement("div");
+          bar.className = "bar";
+          if (idx === 0 || idx === heights.length - 1) bar.classList.add("sentinel");
+          if (idx === step.i) bar.classList.add("current");
+          if (stackSet.has(idx)) bar.classList.add("stack");
+          if (idx === step.popped) bar.classList.add("popped");
+          if (idx >= rectStart && idx <= rectEnd && step.type === "pop") bar.classList.add("in-rect");
+
+          bar.style.height = Math.max(18, h / maxH * 250) + "px";
+          bar.textContent = String(h);
+          group.appendChild(bar);
+
+          var index = document.createElement("div");
+          index.className = "index";
+          index.textContent = "idx " + getDisplayIndex(idx);
+          group.appendChild(index);
+
+          chart.appendChild(group);
+        });
+      }
+
+      function renderStack(step) {
+        stackBox.innerHTML = "";
+        var stack = (step.stack || []).slice();
+        if (step.type === "push" && stack.indexOf(step.i) === -1) {
+          stack.push(step.i);
+        }
+
+        stack.forEach(function (idx) {
+          var item = document.createElement("div");
+          item.className = "stack-item";
+
+          var leftSpan = document.createElement("span");
+          leftSpan.textContent = "idx " + getDisplayIndex(idx);
+
+          var rightSpan = document.createElement("span");
+          rightSpan.textContent = "h = " + heights[idx];
+
+          item.appendChild(leftSpan);
+          item.appendChild(rightSpan);
+          stackBox.appendChild(item);
+        });
+      }
+
+      function renderCode(activeLine) {
+        code.innerHTML = codeLines.map(function (line, idx) {
+          var escaped = escapeHtml(line);
+          if (idx === activeLine) {
+            return '<span class="highlight-line">' + escaped + '</span>';
+          }
+          return escaped;
+        }).join("\n");
+      }
+
+      function render() {
+        var step = steps[currentStep];
+        var title = step.type === "pop" ? "弹栈结算" : (step.type === "push" ? "入栈维护单调性" : "完成");
+
+        renderChart(step);
+        renderStack(step);
+        renderCode(typeof step.line === "number" ? step.line : -1);
+
+        status.innerHTML = "<strong>" + escapeHtml(title) + "</strong><br />" + escapeHtml(step.text);
+        formula.textContent = step.formula;
+        maxArea.textContent = String(step.max);
+        stepCount.textContent = String(currentStep + 1) + "/" + String(steps.length);
+
+        prevBtn.disabled = currentStep === 0;
+        nextBtn.disabled = currentStep === steps.length - 1;
+      }
+
+      function stop() {
+        if (timer !== null) {
+          clearInterval(timer);
+          timer = null;
+        }
+        playBtn.textContent = "播放";
+      }
+
+      function next() {
+        if (currentStep < steps.length - 1) {
+          currentStep += 1;
+          render();
+        } else {
+          stop();
+        }
+      }
+
+      function prev() {
+        if (currentStep > 0) {
+          currentStep -= 1;
+          render();
+        }
+      }
+
+      function play() {
+        if (timer !== null) {
+          stop();
+          return;
+        }
+        playBtn.textContent = "暂停";
+        timer = window.setInterval(next, Number(speed.value));
+      }
+
+      function applyInput() {
+        try {
+          var nums = parseArrayInput(arrayInput.value);
+          errorMsg.textContent = "";
+          testMsg.textContent = "";
+          stop();
+          steps = buildSteps(nums);
+          currentStep = 0;
+          render();
+        } catch (err) {
+          errorMsg.textContent = err.message;
+        }
+      }
+
+      function randomize() {
+        var len = Math.floor(Math.random() * 6) + 5;
+        var nums = Array.from({ length: len }, function () {
+          return Math.floor(Math.random() * 9) + 1;
+        });
+        arrayInput.value = "[" + nums.join(",") + "]";
+        applyInput();
+      }
+
+      function runTests() {
+        var cases = [
+          { input: [2, 1, 5, 6, 2, 3], expected: 10 },
+          { input: [2, 4], expected: 4 },
+          { input: [1], expected: 1 },
+          { input: [0], expected: 0 },
+          { input: [2, 2, 2], expected: 6 },
+          { input: [1, 2, 3, 4, 5], expected: 9 },
+          { input: [5, 4, 3, 2, 1], expected: 9 },
+          { input: [6, 2, 5, 4, 5, 1, 6], expected: 12 }
+        ];
+
+        var failures = [];
+        cases.forEach(function (item) {
+          var actual = calculateLargestRectangle(item.input);
+          if (actual !== item.expected) {
+            failures.push("input=" + JSON.stringify(item.input) + ", expected=" + item.expected + ", actual=" + actual);
+          }
+        });
+
+        if (failures.length === 0) {
+          testMsg.textContent = "测试通过：" + cases.length + " 个用例全部正确。";
+          errorMsg.textContent = "";
+        } else {
+          testMsg.textContent = "";
+          errorMsg.textContent = "测试失败：" + failures.join("；");
+        }
+      }
+
+      playBtn.addEventListener("click", play);
+      nextBtn.addEventListener("click", function () { stop(); next(); });
+      prevBtn.addEventListener("click", function () { stop(); prev(); });
+      resetBtn.addEventListener("click", function () {
+        stop();
+        currentStep = 0;
+        render();
+      });
+      speed.addEventListener("input", function () {
+        if (timer !== null) {
+          stop();
+          play();
+        }
+      });
+      applyInputBtn.addEventListener("click", applyInput);
+      randomBtn.addEventListener("click", randomize);
+      testBtn.addEventListener("click", runTests);
+      arrayInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          applyInput();
+        }
+      });
+
+      steps = buildSteps(rawHeights);
+      runTests();
+      render();
+    }());
+  </script>
+</body>
+</html>

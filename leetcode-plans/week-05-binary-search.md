@@ -4,9 +4,9 @@
 
 把“看起来要遍历”的问题，转成“能排除一半搜索空间”的问题。到本周结束时，你应该能在动手前先说清：搜索范围是什么，答案是否一定存在，区间左右端点代表什么，循环什么时候停止，以及返回的是命中位置、插入位置、边界位置还是某个满足条件的最小 / 最大值。
 
-当前进度：待开始第 1 天训练。建议先从基础有序数组和插入位置进入，再逐步过渡到矩阵、旋转数组、答案空间和设计题中的时间轴查询。
+当前进度：已完成第 1 天训练。下一步进入第 2 天“边界定位与近似答案”，重点复盘第一个满足条件的位置、整数近似值和重复元素范围。
 
-资料校准：题号、英文题名和难度已通过 LeetCode 中文题目页、leetcode.ca 镜像页与 LeetCode Wiki 资料校准；第 5 周题单于 2026-05-22 复核。
+资料校准：题号、英文题名和难度已通过 LeetCode 中文题目页、leetcode.ca 镜像页与 LeetCode Wiki 资料校准；第 1 天题目于 2026-05-22 复核。
 
 ## 与第 4 周衔接
 
@@ -80,3 +80,53 @@
 - 第 5 天：切到答案范围题，重点把候选答案和检查函数拆开思考。
 - 第 6 天：处理峰值和困难边界，不追求快，先画出当前位置和相邻位置关系。
 - 第 7 天：做综合迁移，把本周模板迁移到成对结构、连续结果段和设计题时间轴。
+
+## 进度更新 - 2026-05-22
+
+- 今日完成：`704. Binary Search`、`35. Search Insert Position`、`744. Find Smallest Letter Greater Than Target`
+- 当前主题：第 1 天 - 基础区间与插入位置
+
+### 通用解题模板
+
+- 适用条件：题目可以转成 `false...false true...true` 的单调判断，并要求找到第一个 `true` 的位置。
+- 核心骨架：使用左闭右开区间 `[left, right)`；`check(middle) == true` 时，`middle` 可能是第一个 `true`，所以收缩右边界 `right = middle`；`check(middle) == false` 时，`middle` 和它左侧都可以排除，所以 `left = middle + 1`。
+- 关键边界：循环结束后返回 `left`；如果 `left == n`，说明不存在 `true`；如果题目有回绕规则，就把 `left == n` 映射到题目要求的位置。
+- 复杂度：时间 `O(log n)`，空间 `O(1)`。
+
+```cpp
+class Solution {
+public:
+    int firstTrueTemplate(int n) {
+        int left = 0;
+        int right = n;
+
+        while (left < right) {
+            int middle = left + (right - left) / 2;
+            if (check(middle)) {
+                right = middle; // middle 可能是第一个 true，保留。
+            } else {
+                left = middle + 1; // middle 是 false，直接排除。
+            }
+        }
+
+        return left; // left == n 表示不存在 true。
+    }
+
+private:
+    bool check(int index) {
+        // 按题意定义 index 是否已经进入 true 区间。
+        return true;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `704. Binary Search` | 待提交验证，源码逻辑检查通过 | 同时写出手写二分和 `lower_bound` 版本，半开区间更新正确。 | 公开函数当前调用库函数；训练时建议优先复盘手写区间语义。 | [查看](../leetcode-reviews/2026-05-22-704-binary-search.md) |
+| `35. Search Insert Position` | 待提交验证，源码逻辑检查通过 | 准确抓住“第一个大于等于目标”的边界语义。 | 继续强调 `right = middle` 是保留可能答案，不是漏更新。 | [查看](../leetcode-reviews/2026-05-22-35-search-insert-position.md) |
+| `744. Find Smallest Letter Greater Than Target` | 待提交验证，源码逻辑检查通过 | 正确使用 `upper_bound` 语义，并覆盖所有字符都不大于目标时的回绕。 | 重点对比 `>= target` 和 `> target` 的比较符差异。 | [查看](../leetcode-reviews/2026-05-22-744-find-smallest-letter-greater-than-target.md) |
+
+- 暴露问题：今天整体开局很好，已经能把边界题归纳到 `lower_bound / upper_bound` 语义上。主要注意两点：第一，提交可以用库函数，但训练阶段要能手写并解释区间含义；第二，边界题真正的风险往往是比较符差一位，比如 `< target`、`<= target` 对应的答案语义完全不同。
+- 下一步安排：进入第 2 天边界定位与近似答案。下一组题会继续放大“第一个满足条件的位置”和“整数范围内的近似返回值”，完成后重点复盘循环结束时 `left` 停在哪里。

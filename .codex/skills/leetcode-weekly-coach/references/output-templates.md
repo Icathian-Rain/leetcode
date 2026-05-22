@@ -217,6 +217,130 @@ public:
 - 保留用户原实现：<是 / 否；如果否，说明原因>
 ````
 
+## 算法模板输出模板
+
+当用户要求“写一个模板”“把某种做法沉淀成板子”“写入一个可运行样例”时使用。
+
+````md
+# 算法模板 - <模板名>
+
+## 基本信息
+
+- 日期：<YYYY-MM-DD>
+- 主题：<所属主题或适用题型>
+- 目标：<这份模板主要解决什么问题>
+- 适用语言：<C++20 / 用户指定语言>
+- 文档路径：<目标 Markdown 路径或 仅聊天输出>
+- 测试代码路径：<目标代码路径或 未生成>
+
+## 适用信号
+
+- <题面中出现什么关键词、结构或约束时可以想到这个模板>
+- <第二条识别信号>
+- <第三条识别信号，可选>
+
+## 核心思路
+
+1. <先定义模板里的核心状态、边界或不变量。>
+2. <说明每轮如何推进，为什么能排除一部分情况或累积状态。>
+3. <说明何时结束，以及返回值代表什么。>
+
+## 关键边界
+
+- <空输入 / 单元素 / 目标不存在 / 全部满足 / 全部不满足等>
+- <最容易写错的比较符、收缩条件或收尾动作>
+- <如果有回绕、取模、恢复结构或去重，也写在这里>
+
+## 复杂度
+
+- 时间复杂度：`O(...)`
+- 空间复杂度：`O(...)`
+
+## 模板代码
+
+> 模板代码优先贴近 LeetCode 提交格式：使用 `class Solution`；如果需要复用一段通用骨架，优先把骨架收进 `private` 辅助函数，再由 `public` 方法承接具体题目语义。
+
+```cpp
+class Solution {
+private:
+    int helperExample(int n) {
+        // 中文注释只解释关键状态、边界或容易误解的步骤
+        return n;
+    }
+
+public:
+    int templateExample(vector<int>& nums) {
+        return helperExample(static_cast<int>(nums.size()));
+    }
+
+    int templateVariant(vector<int>& nums, int target) {
+        // 按具体题意包装同一套模板骨架
+        // ...
+        return 0;
+    }
+};
+```
+
+## 运行样例
+
+### 样例 1
+
+- 输入：`<简短输入>`
+- 输出：`<期望输出>`
+- 说明：<这组输入如何覆盖模板中的关键判断>
+
+### 样例 2
+
+- 输入：`<边界输入>`
+- 输出：`<期望输出>`
+- 说明：<这组输入如何覆盖边界或易错点>
+
+## 套用提醒
+
+- <什么时候直接套模板就够了>
+- <什么时候必须先改 check 条件、比较符、区间定义或返回值语义>
+- <和相邻模板最容易混淆的地方>
+````
+
+## 算法模板测试代码模板
+
+当用户要求把模板“写入文件”时，除了 Markdown 文档，还要生成一个可编译运行的测试代码文件。
+
+````cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+class Solution {
+private:
+    int helperExample(int n) {
+        // 中文注释只解释关键状态、边界或容易误解的步骤
+        return n;
+    }
+
+public:
+    int templateExample(vector<int>& nums) {
+        return helperExample(static_cast<int>(nums.size()));
+    }
+
+    int templateVariant(vector<int>& nums, int target) {
+        // 根据题目语义包装同一套模板
+        return 0;
+    }
+};
+
+int main() {
+    Solution solution;
+
+    vector<int> sample1 = {/* 样例 1 输入 */};
+    cout << solution.templateExample(sample1) << '\n'; // 期望输出：...
+
+    vector<int> sample2 = {/* 样例 2 输入 */};
+    cout << solution.templateVariant(sample2, /* target */ 0) << '\n'; // 期望输出：...
+
+    return 0;
+}
+````
+
 推荐同步形式：
 
 ```cpp
@@ -239,6 +363,8 @@ public:
 
 - 周计划：`leetcode-plans/week-XX-<topic>.md`
 - 单题点评：`leetcode-reviews/YYYY-MM-DD-<problem-number>-<problem-slug>.md`
+- 算法模板文档：`leetcode-templates/docs/YYYY-MM-DD-<pattern-slug>.md`
+- 算法模板测试代码：`leetcode-templates/code/YYYY-MM-DD-<pattern-slug>.cpp`
 - 题号未知：`leetcode-reviews/YYYY-MM-DD-<problem-slug>.md`
 
 ## 语言规则

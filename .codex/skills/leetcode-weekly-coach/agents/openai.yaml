@@ -1,4 +1,4 @@
 interface:
   display_name: "LeetCode 周计划教练"
-  short_description: "生成计划、更新进度并点评单题"
-  default_prompt: "使用 $leetcode-weekly-coach 根据主题生成周计划；总结当天题目时更新周计划并为每题生成点评文档；我提交单题题解后生成中文点评和 C++20 最优解代码。"
+  short_description: "生成计划、更新进度、点评单题，并写 LeetCode 风格算法模板文档与可运行测试代码"
+  default_prompt: "使用 $leetcode-weekly-coach 根据主题生成周计划；总结当天题目时更新周计划并为每题生成点评文档；我提交单题题解后生成中文点评和 C++20 最优解代码；当我要求某种算法模板时，生成 LeetCode class Solution 风格的可复用模板，写入独立 Markdown 文档，并同步生成可运行测试代码。"

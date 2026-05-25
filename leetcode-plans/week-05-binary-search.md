@@ -4,7 +4,7 @@
 
 把“看起来要遍历”的问题，转成“能排除一半搜索空间”的问题。到本周结束时，你应该能在动手前先说清：搜索范围是什么，答案是否一定存在，区间左右端点代表什么，循环什么时候停止，以及返回的是命中位置、插入位置、边界位置还是某个满足条件的最小 / 最大值。
 
-当前进度：已完成第 2 天训练。下一步进入第 3 天“矩阵中的有序关系”，重点观察二维结构里哪些顺序关系能直接用来排除搜索范围。
+当前进度：已完成第 3 天训练。下一步进入第 4 天“旋转与局部有序”，重点练习在局部有序结构里判断哪一侧可以排除。
 
 资料校准：题号、英文题名和难度已通过 LeetCode 中文题目页、leetcode.ca 镜像页与 LeetCode Wiki 资料校准；第 1 天题目于 2026-05-22 复核。
 
@@ -211,3 +211,84 @@ private:
 3. `240. Search a 2D Matrix II` (`中等`) - 对比整体有序与行列有序的区别，练习选择更合适的搜索起点。
 
 完成后重点复盘：每题先判断“能不能把二维矩阵当成一维有序数组”，再决定用区间边界还是行列推进。
+
+## 进度更新 - 2026-05-24
+
+- 今日完成：`1351. Count Negative Numbers in a Sorted Matrix`、`74. Search a 2D Matrix`、`240. Search a 2D Matrix II`
+- 当前主题：第 3 天 - 矩阵中的有序关系
+
+### 通用解题模板
+
+- 适用条件：题目给出二维矩阵，并且行、列或行与行之间存在明确顺序关系，可以用这些关系排除一整段位置。
+- 核心骨架：先判断矩阵是否能整体映射成一维有序数组；如果可以，用一维下标二分并转换回行列；如果只是行列分别有序，优先从右上角或左下角出发，每步排除一行或一列。
+- 关键边界：二维转一维时注意 `row = index / cols`、`col = index % cols`；阶梯搜索时必须选一个能同时比较“左侧更小、下方更大”或对称关系的角；空矩阵和单行单列要单独手推。
+- 复杂度：一维映射二分为时间 `O(log(mn))`、空间 `O(1)`；阶梯搜索为时间 `O(m+n)`、空间 `O(1)`。
+
+```cpp
+class Solution {
+public:
+    bool flattenedBinarySearch(vector<vector<int>>& matrix, int target) {
+        int rows = matrix.size();
+        int cols = matrix[0].size();
+        int left = 0;
+        int right = rows * cols - 1;
+
+        while (left <= right) {
+            int middle = left + (right - left) / 2;
+            int row = middle / cols;
+            int col = middle % cols;
+            if (matrix[row][col] == target) {
+                return true;
+            }
+            if (matrix[row][col] < target) {
+                left = middle + 1;
+            } else {
+                right = middle - 1;
+            }
+        }
+
+        return false;
+    }
+
+    bool staircaseSearch(vector<vector<int>>& matrix, int target) {
+        int rows = matrix.size();
+        int cols = matrix[0].size();
+        int row = 0;
+        int col = cols - 1;
+
+        while (row < rows && col >= 0) {
+            if (matrix[row][col] == target) {
+                return true;
+            }
+            if (matrix[row][col] > target) {
+                --col; // 当前列可以排除。
+            } else {
+                ++row; // 当前行可以排除。
+            }
+        }
+
+        return false;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `1351. Count Negative Numbers in a Sorted Matrix` | 待提交验证，源码逻辑检查通过 | 能利用行列单调性让列指针只左移不重置，达到 `O(m+n)`。 | 复盘时重点说清为什么下一行不需要重新从最右侧开始。 | [查看](../leetcode-reviews/2026-05-24-1351-count-negative-numbers-in-a-sorted-matrix.md) |
+| `74. Search a 2D Matrix` | 待提交验证，源码逻辑检查通过 | 先找候选行再行内二分，边界检查完整。 | 变量名中 `m` 有遮蔽；建议掌握一维映射二分，模板更统一。 | [查看](../leetcode-reviews/2026-05-24-74-search-a-2-d-matrix.md) |
+| `240. Search a 2D Matrix II` | 待提交验证，源码逻辑检查通过 | 正确从右上角开始，每一步排除一行或一列，复杂度最优。 | 重点对比第 74 题：这里不能直接拍平成一维有序数组。 | [查看](../leetcode-reviews/2026-05-24-240-search-a-2-d-matrix-ii.md) |
+
+- 暴露问题：今天整体表现很稳，尤其 `1351` 和 `240` 都已经抓住右上角阶梯搜索的移动依据。主要复盘点是矩阵题的前置判断：第 `74` 题有全局一维顺序，第 `240` 题只有行列分别有序，不能把两者混成同一个模板。
+- 下一步安排：进入第 4 天旋转与局部有序。下一组题会从二维顺序切换到一维数组里的局部有序结构，重点判断当前哪一半仍然有序，以及目标是否落在那一半。
+
+## 第 4 天 - 旋转与局部有序
+
+今天承接：第 3 天已经训练了二维结构中的排除方向，接下来要在一维数组里识别局部有序段和转折点。
+
+1. `852. Peak Index in a Mountain Array` (`简单`) - 先练习在单峰结构中定位转折位置。
+2. `153. Find Minimum in Rotated Sorted Array` (`中等`) - 练习在旋转后重新识别哪一侧仍可能包含最小值。
+3. `33. Search in Rotated Sorted Array` (`中等`) - 在局部有序结构里查找目标，训练先判断有序半边再排除。
+
+完成后重点复盘：每轮不要只看 `mid` 和 `target`，先判断 `[left, mid]` 或 `[mid, right]` 哪一侧有序，再决定目标是否落在可保留区间。

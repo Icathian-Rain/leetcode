@@ -4,7 +4,7 @@
 
 把“看起来要遍历”的问题，转成“能排除一半搜索空间”的问题。到本周结束时，你应该能在动手前先说清：搜索范围是什么，答案是否一定存在，区间左右端点代表什么，循环什么时候停止，以及返回的是命中位置、插入位置、边界位置还是某个满足条件的最小 / 最大值。
 
-当前进度：已完成第 3 天训练。下一步进入第 4 天“旋转与局部有序”，重点练习在局部有序结构里判断哪一侧可以排除。
+当前进度：已完成第 3 天训练，并完成第 5 天“答案范围与可行性检查”三题。第 4 天“旋转与局部有序”尚未在计划中记录完成；下一步建议先补第 4 天总结，或继续进入第 6 天峰值与困难边界。
 
 资料校准：题号、英文题名和难度已通过 LeetCode 中文题目页、leetcode.ca 镜像页与 LeetCode Wiki 资料校准；第 1 天题目于 2026-05-22 复核。
 
@@ -292,3 +292,61 @@ public:
 3. `33. Search in Rotated Sorted Array` (`中等`) - 在局部有序结构里查找目标，训练先判断有序半边再排除。
 
 完成后重点复盘：每轮不要只看 `mid` 和 `target`，先判断 `[left, mid]` 或 `[mid, right]` 哪一侧有序，再决定目标是否落在可保留区间。
+
+## 进度更新 - 2026-05-26
+
+- 今日完成：`875. Koko Eating Bananas`、`1011. Capacity To Ship Packages Within D Days`、`1283. Find the Smallest Divisor Given a Threshold`
+- 当前主题：第 5 天 - 答案范围与可行性检查
+
+### 通用解题模板
+
+- 适用条件：题目要求寻找最小或最大满足约束的整数答案，并且候选答案越大或越小，可行性呈单调变化。
+- 核心骨架：先确定答案上下界；写一个 `check(answer)` 判断候选答案是否可行；如果要找最小可行值，`check(mid)` 为真时保留 `mid` 并收缩右边界，否则排除左侧。
+- 关键边界：上下界必须保证答案存在；`check` 内部要尽早退出；涉及除法向上取整时优先使用 `(value + divisor - 1) / divisor`，避免浮点 `ceil`；累加可能变大时使用 `long long`。
+- 复杂度：时间通常为 `O(n log R)`，空间 `O(1)`，其中 `R` 是答案范围大小。
+
+```cpp
+class Solution {
+public:
+    int minFeasibleAnswer(vector<int>& nums) {
+        int left = lowerBound(nums);
+        int right = upperBound(nums);
+
+        while (left < right) {
+            int middle = left + (right - left) / 2;
+            if (check(nums, middle)) {
+                right = middle; // middle 可行，继续寻找更小可行答案。
+            } else {
+                left = middle + 1; // middle 不可行，答案只能更大。
+            }
+        }
+
+        return left;
+    }
+
+private:
+    bool check(vector<int>& nums, int candidate) {
+        // 按题意模拟速度、容量、除数等候选答案是否满足约束。
+        return true;
+    }
+
+    int lowerBound(vector<int>& nums) {
+        return 1;
+    }
+
+    int upperBound(vector<int>& nums) {
+        return *max_element(nums.begin(), nums.end());
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `875. Koko Eating Bananas` | 待提交验证，源码逻辑检查通过 | 正确把速度建模成最小可行答案，二分方向和提前退出都到位。 | 建议把浮点 `ceil` 改成整数上取整，避免精度和表达风险。 | [查看](../leetcode-reviews/2026-05-26-875-koko-eating-bananas.md) |
+| `1011. Capacity To Ship Packages Within D Days` | 待提交验证，源码逻辑检查通过 | 上下界选择准确，`check` 能保持包裹顺序并模拟天数。 | 复盘时强调包裹不能重排；变量名可从剩余容量改成当前载重，语义更直观。 | [查看](../leetcode-reviews/2026-05-26-1011-capacity-to-ship-packages-within-d-days.md) |
+| `1283. Find the Smallest Divisor Given a Threshold` | 待提交验证，源码逻辑检查通过 | 正确识别除数越大、结果和越小的单调性，边界合理。 | 与 `875` 同样建议使用整数上取整，并说清可行区间在右侧。 | [查看](../leetcode-reviews/2026-05-26-1283-find-the-smallest-divisor-given-a-threshold.md) |
+
+- 暴露问题：今天三题共同模式很清晰，已经能把“速度 / 容量 / 除数”抽象成候选答案，并写出可行性检查。主要需要收束两个实现习惯：第一，整数题尽量不用浮点 `ceil`；第二，`check` 函数里要用语义化变量说明正在模拟的约束。
+- 下一步安排：如果第 4 天 `852/153/33` 已经完成，建议先补第 4 天总结，保持周计划顺序完整；如果还没做，则先回补旋转与局部有序，再进入第 6 天峰值、分割与困难边界。

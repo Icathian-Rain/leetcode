@@ -179,3 +179,53 @@ public:
 
 - 暴露问题：第 2 天整体完成质量很好，层边界已经稳定；主要提升点不是正确性，而是把“遍历顺序”和“输出顺序”分开讲清楚。
 - 下一步安排：进入第 3 天高度、平衡与公共祖先。`110. Balanced Binary Tree` 已创建但尚未实现，可以先用它承接“子树返回高度，当前节点判断性质”的训练。
+
+## 进度更新 - 2026-05-29（第 3 天）
+
+- 今日完成：`110. Balanced Binary Tree`、`543. Diameter of Binary Tree`、`236. Lowest Common Ancestor of a Binary Tree`
+- 当前主题：第 3 天 - 高度、平衡与公共祖先
+
+### 通用解题模板
+
+- 适用条件：题目要求根据左右子树结果判断当前节点性质、更新全局答案，或把命中状态向父节点传播。
+- 核心骨架：先定义递归返回给父节点的信息；空节点返回题意下的中性值；递归处理左右子树；当前节点根据左右结果更新局部判断或全局答案；最后返回父节点需要的单一信息。
+- 关键边界：返回给父节点的信息不能混入只能在当前节点结算的全局答案；路径类题通常只能向上贡献单边结果；公共祖先类题要允许目标节点本身作为祖先。
+- 复杂度：时间 `O(n)`，空间 `O(h)`，其中 `h` 是树高。
+
+```cpp
+class Solution {
+    int answer = 0;
+
+    int treePostorderTemplate(TreeNode* root) {
+        if (root == nullptr) {
+            return 0; // 空节点返回当前题的中性值。
+        }
+
+        int left = treePostorderTemplate(root->left);
+        int right = treePostorderTemplate(root->right);
+
+        // 在当前节点合并左右结果，必要时更新全局答案。
+        answer = max(answer, combineForGlobal(left, right));
+        return contributionToParent(left, right); // 返回父节点真正需要的信息。
+    }
+
+    int combineForGlobal(int left, int right) {
+        return left + right;
+    }
+
+    int contributionToParent(int left, int right) {
+        return max(left, right) + 1;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `110. Balanced Binary Tree` | 待提交验证，源码逻辑检查通过 | 能一次递归同时返回高度和平衡性，并在子树失败时提前剪枝。 | `pair<int, int>` 的第二项语义实际是 bool，可改成哨兵或更明确类型。 | [查看](../leetcode-reviews/2026-05-29-110-balanced-binary-tree.md) |
+| `543. Diameter of Binary Tree` | 待提交验证，源码逻辑检查通过 | 正确区分“返回给父节点的高度”和“当前节点更新的全局直径”。 | 成员变量 `ans` 在复用对象多次调用时要重置；可改局部变量引用。 | [查看](../leetcode-reviews/2026-05-29-543-diameter-of-binary-tree.md) |
+| `236. Lowest Common Ancestor of a Binary Tree` | 待提交验证，源码逻辑检查通过 | 覆盖目标节点本身作为祖先的情况，并能把已找到的 LCA 向上传播。 | 当前分支略复杂，建议熟悉更标准的左右结果合并模板。 | [查看](../leetcode-reviews/2026-05-29-236-lowest-common-ancestor-of-a-binary-tree.md) |
+
+- 暴露问题：今天整体已经进入树题核心区，最大进步是开始稳定区分“子树返回给父节点的信息”和“当前节点自己结算的答案”。主要复盘点是减少分支复杂度，让返回值语义更统一。
+- 下一步安排：进入第 4 天二叉搜索树基础判断。接下来从普通二叉树的后序合并切到 BST 的全局有序限制，重点观察限制是只看父子节点，还是要覆盖整棵左右子树。

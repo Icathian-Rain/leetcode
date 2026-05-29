@@ -125,3 +125,57 @@ private:
 
 - 暴露问题：今天整体很稳，三题都已经抓住“先定义递归返回值，再处理空节点，再合并左右结果”的主线。主要需要继续强化口述能力：每道题都要能一句话说出递归函数返回给父节点的是什么。
 - 下一步安排：进入第 2 天分层观察与视角结果。下一组题会从递归调用栈切换到按层维护节点，重点观察每一层的边界和结果收集时机。
+
+## 进度更新 - 2026-05-29
+
+- 今日完成：`102. Binary Tree Level Order Traversal`、`103. Binary Tree Zigzag Level Order Traversal`、`199. Binary Tree Right Side View`
+- 当前主题：第 2 天 - 分层观察与视角结果
+
+### 通用解题模板
+
+- 适用条件：题目要求按树的每一层收集、变形或提取结果，例如每层数组、交替方向、每层代表节点。
+- 核心骨架：队列从根节点开始；每轮先记录当前队列大小作为本层边界；只处理固定数量节点；处理过程中把非空孩子加入队列，留到下一层。
+- 关键边界：空树直接返回空结果；必须在进入本层循环前保存 `levelSize`；不要用循环中的动态 `q.size()` 判断本层结束；输出方向可以改变，但队列推进顺序通常保持左、右孩子自然入队。
+- 复杂度：时间 `O(n)`，空间 `O(w)`，其中 `w` 是树的最大宽度。
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> levelTemplate(TreeNode* root) {
+        vector<vector<int>> ans;
+        if (root == nullptr) {
+            return ans;
+        }
+
+        queue<TreeNode*> q;
+        q.push(root);
+        while (!q.empty()) {
+            int levelSize = static_cast<int>(q.size());
+            vector<int> level;
+
+            // 当前循环只消费本层节点，孩子节点留给下一轮。
+            for (int i = 0; i < levelSize; ++i) {
+                TreeNode* node = q.front();
+                q.pop();
+                level.push_back(node->val);
+
+                if (node->left != nullptr) q.push(node->left);
+                if (node->right != nullptr) q.push(node->right);
+            }
+            ans.push_back(level);
+        }
+        return ans;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `102. Binary Tree Level Order Traversal` | 待提交验证，源码逻辑检查通过 | 能稳定用 `q.size()` 冻结当前层边界，每层结果不会混入下一层。 | 变量名可以更语义化；复盘时说清 `levelSize` 的作用。 | [查看](../leetcode-reviews/2026-05-29-102-binary-tree-level-order-traversal.md) |
+| `103. Binary Tree Zigzag Level Order Traversal` | 待提交验证，源码逻辑检查通过 | 复用层序骨架，只改变当前层输出方向，没有破坏队列推进顺序。 | 可以进一步练习“按下标写入”来省掉反转步骤。 | [查看](../leetcode-reviews/2026-05-29-103-binary-tree-zigzag-level-order-traversal.md) |
+| `199. Binary Tree Right Side View` | 待提交验证，源码逻辑检查通过 | 正确把右视图转化为每层最后一个节点，思路直接且稳。 | 建议补充右优先 DFS 视角，训练“第一次到达某深度”的建模。 | [查看](../leetcode-reviews/2026-05-29-199-binary-tree-right-side-view.md) |
+
+- 暴露问题：第 2 天整体完成质量很好，层边界已经稳定；主要提升点不是正确性，而是把“遍历顺序”和“输出顺序”分开讲清楚。
+- 下一步安排：进入第 3 天高度、平衡与公共祖先。`110. Balanced Binary Tree` 已创建但尚未实现，可以先用它承接“子树返回高度，当前节点判断性质”的训练。

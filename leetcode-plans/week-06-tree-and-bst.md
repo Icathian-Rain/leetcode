@@ -229,3 +229,54 @@ class Solution {
 
 - 暴露问题：今天整体已经进入树题核心区，最大进步是开始稳定区分“子树返回给父节点的信息”和“当前节点自己结算的答案”。主要复盘点是减少分支复杂度，让返回值语义更统一。
 - 下一步安排：进入第 4 天二叉搜索树基础判断。接下来从普通二叉树的后序合并切到 BST 的全局有序限制，重点观察限制是只看父子节点，还是要覆盖整棵左右子树。
+
+## 进度更新 - 2026-05-31
+
+- 今日完成：`700. Search in a Binary Search Tree`、`98. Validate Binary Search Tree`、`230. Kth Smallest Element in a BST`、`235. Lowest Common Ancestor of a Binary Search Tree`
+- 当前主题：第 4 天 - 二叉搜索树基础判断；并提前完成第 5 天第一题
+
+### 通用解题模板
+
+- 适用条件：题目明确给出二叉搜索树，要求查询节点、判断合法性、按有序顺序定位名次，或根据两个目标节点的位置关系找分叉点。
+- 核心骨架：先判断当前节点是否为空或命中；利用左小右大的全局有序关系决定只走一侧，或用中序遍历把 BST 转成严格递增序列；涉及合法性判断时要携带祖先范围，而不是只比较父子节点。
+- 关键边界：BST 合法性必须是严格不等；节点值可能到达 `-2^31`，哨兵值要用 `LLONG_MIN/LLONG_MAX` 或直接用上下界；成员变量计数或前驱值要注意多次调用时重置。
+- 复杂度：搜索路径类通常时间 `O(h)`、空间递归 `O(h)` 或迭代 `O(1)`；中序遍历类通常时间 `O(n)` 或提前停止到 `O(h+k)`，空间 `O(h)`。
+
+```cpp
+class Solution {
+public:
+    TreeNode* bstSearchTemplate(TreeNode* root, int target) {
+        while (root != nullptr) {
+            if (root->val == target) {
+                return root;
+            }
+            // BST 查询每次只保留可能含有目标的一侧。
+            root = target < root->val ? root->left : root->right;
+        }
+        return nullptr;
+    }
+
+    bool bstRangeTemplate(TreeNode* root, long long lower, long long upper) {
+        if (root == nullptr) {
+            return true;
+        }
+        if (root->val <= lower || root->val >= upper) {
+            return false;
+        }
+        return bstRangeTemplate(root->left, lower, root->val) &&
+               bstRangeTemplate(root->right, root->val, upper);
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `700. Search in a Binary Search Tree` | 待提交验证，源码逻辑检查通过 | 正确根据大小关系只进入一侧子树，命中后返回整棵目标子树。 | 可补迭代写法，把空间降到 `O(1)`。 | [查看](../leetcode-reviews/2026-05-31-700-search-in-a-binary-search-tree.md) |
+| `98. Validate Binary Search Tree` | 有边界风险，主体思路正确 | 抓住了中序遍历严格递增这个核心性质。 | `LONG_MIN` 在节点值取到 `-2^31` 时可能撞边界，建议改用上下界递归。 | [查看](../leetcode-reviews/2026-05-31-98-validate-binary-search-tree.md) |
+| `230. Kth Smallest Element in a BST` | 待提交验证，源码逻辑检查通过 | 正确用中序遍历的升序访问定位第 k 小，并能找到后提前返回。 | 成员变量 `idx` 多次调用会残留；迭代中序或入口重置更稳。 | [查看](../leetcode-reviews/2026-05-31-230-kth-smallest-element-in-a-bst.md) |
+| `235. Lowest Common Ancestor of a Binary Search Tree` | 待提交验证，源码逻辑检查通过 | 能把 LCA 转化为两条 BST 搜索路径的第一个分叉点。 | 当前递归正确；迭代版能把额外空间降为 `O(1)`。 | [查看](../leetcode-reviews/2026-05-31-235-lowest-common-ancestor-of-a-binary-search-tree.md) |
+
+- 暴露问题：今天 BST 方向判断整体很稳，主要风险集中在“全局范围”和“成员状态”两类边界：98 不要用可能撞值域的哨兵，230 的计数状态要避免跨调用残留。
+- 下一步安排：继续第 5 天二叉搜索树查询与修改。`701. Insert into a Binary Search Tree` 适合作为热身，`450. Delete Node in a BST` 是今天 BST 搜索路径训练后的主要挑战。

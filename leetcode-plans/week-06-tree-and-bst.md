@@ -280,3 +280,56 @@ public:
 
 - 暴露问题：今天 BST 方向判断整体很稳，主要风险集中在“全局范围”和“成员状态”两类边界：98 不要用可能撞值域的哨兵，230 的计数状态要避免跨调用残留。
 - 下一步安排：继续第 5 天二叉搜索树查询与修改。`701. Insert into a Binary Search Tree` 适合作为热身，`450. Delete Node in a BST` 是今天 BST 搜索路径训练后的主要挑战。
+
+## 进度更新 - 2026-05-31（第 5 天补充）
+
+- 今日完成：`701. Insert into a Binary Search Tree`、`450. Delete Node in a BST`
+- 当前主题：第 5 天 - 二叉搜索树查询与修改
+
+### 通用解题模板
+
+- 适用条件：题目要求在 BST 中插入、删除或裁剪节点，并在修改后保持 BST 的有序结构。
+- 核心骨架：搜索阶段根据 `key/val` 与当前节点值的大小关系只进入一侧；递归返回修改后的子树根；当前节点负责把左或右孩子重新接好；真正命中目标后再做局部结构重接。
+- 关键边界：空子树往往就是插入位置或删除结束点；删除节点要区分无孩子、单孩子、双孩子；双孩子删除时可以用右子树最小节点或左子树最大节点承接另一侧子树；不要在未命中目标时同时递归左右两侧。
+- 复杂度：时间 `O(h)`，空间递归 `O(h)`，其中 `h` 是树高；退化链表时最坏 `O(n)`。
+
+```cpp
+class Solution {
+public:
+    TreeNode* modifyBST(TreeNode* root, int key) {
+        if (root == nullptr) {
+            return nullptr;
+        }
+
+        if (key < root->val) {
+            root->left = modifyBST(root->left, key);
+        } else if (key > root->val) {
+            root->right = modifyBST(root->right, key);
+        } else {
+            // 命中目标后，在这里处理插入、删除或替换的局部结构。
+            return rebuildLocalRoot(root);
+        }
+        return root;
+    }
+
+private:
+    TreeNode* rebuildLocalRoot(TreeNode* root) {
+        if (root->left == nullptr) return root->right;
+        if (root->right == nullptr) return root->left;
+        TreeNode* successor = root->right;
+        while (successor->left != nullptr) successor = successor->left;
+        successor->left = root->left;
+        return root->right;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `701. Insert into a Binary Search Tree` | 待提交验证，源码逻辑检查通过 | 能在空位置创建新节点，并把修改后的子树根一路返回。 | 可补迭代写法，把额外空间从 `O(h)` 降到 `O(1)`。 | [查看](../leetcode-reviews/2026-05-31-701-insert-into-a-binary-search-tree.md) |
+| `450. Delete Node in a BST` | 待提交验证，源码逻辑正确但复杂度可优化 | 删除目标后的三类结构处理完整，双孩子节点重接思路可行。 | 未命中时同时递归左右子树，没利用 BST 方向剪枝；应只递归一侧。 | [查看](../leetcode-reviews/2026-05-31-450-delete-node-in-a-bst.md) |
+
+- 暴露问题：结构修改能力已经有了，尤其是能想到“双孩子删除后如何接回两边子树”。主要短板是搜索阶段要坚持 BST 的单侧路径，不要退回普通二叉树的全树 DFS。
+- 下一步安排：进入第 6 天路径、贡献值与困难边界。建议先做 `112. Path Sum` 和 `113. Path Sum II`，把普通树路径状态重新练稳，再挑战 `124. Binary Tree Maximum Path Sum`。

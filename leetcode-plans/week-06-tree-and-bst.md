@@ -333,3 +333,60 @@ private:
 
 - 暴露问题：结构修改能力已经有了，尤其是能想到“双孩子删除后如何接回两边子树”。主要短板是搜索阶段要坚持 BST 的单侧路径，不要退回普通二叉树的全树 DFS。
 - 下一步安排：进入第 6 天路径、贡献值与困难边界。建议先做 `112. Path Sum` 和 `113. Path Sum II`，把普通树路径状态重新练稳，再挑战 `124. Binary Tree Maximum Path Sum`。
+
+## 进度更新 - 2026-06-01
+
+- 今日完成：`112. Path Sum`、`113. Path Sum II`、`124. Binary Tree Maximum Path Sum`
+- 当前主题：第 6 天 - 路径、贡献值与困难边界
+
+### 通用解题模板
+
+- 适用条件：题目围绕树上的路径展开，需要沿根到叶维护状态、收集路径，或在每个节点合并左右子树贡献更新全局答案。
+- 核心骨架：根到叶路径题向下传递剩余目标值，并只在叶子结算；收集路径时使用 `push -> dfs -> pop` 回溯；最大路径类题让递归返回“能向父节点延伸的单边贡献”，全局答案在当前节点合并左右贡献。
+- 关键边界：空节点不能构成根到叶路径；只有叶子节点代表完整路径；路径收集时必须撤销当前选择；最大路径和要允许全负树，负贡献不要向上延伸。
+- 复杂度：通常时间 `O(n)`，空间 `O(h)`；如果需要复制所有路径，答案复制成本可能达到 `O(n*h)`。
+
+```cpp
+class Solution {
+    int best = INT_MIN;
+
+    int gainTemplate(TreeNode* root) {
+        if (root == nullptr) {
+            return 0;
+        }
+
+        int left = max(0, gainTemplate(root->left));
+        int right = max(0, gainTemplate(root->right));
+        // 当前节点作为拐点时可以合并两侧；向父节点只能贡献一侧。
+        best = max(best, root->val + left + right);
+        return root->val + max(left, right);
+    }
+
+    void pathTemplate(TreeNode* root, int target, vector<int>& path) {
+        if (root == nullptr) {
+            return;
+        }
+
+        path.push_back(root->val);
+        target -= root->val;
+        if (root->left == nullptr && root->right == nullptr) {
+            // 在叶子节点结算根到叶路径。
+        } else {
+            pathTemplate(root->left, target, path);
+            pathTemplate(root->right, target, path);
+        }
+        path.pop_back();
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `112. Path Sum` | 待提交验证，源码逻辑检查通过 | 正确用剩余目标值向下传递，并且只在叶子节点判断完整路径。 | 叶子分支可以简化成直接比较当前节点值与剩余目标。 | [查看](../leetcode-reviews/2026-06-01-112-path-sum.md) |
+| `113. Path Sum II` | 待提交验证，源码逻辑检查通过 | `path.push_back` 和 `path.pop_back` 的回溯位置正确，能隔离不同路径。 | 成员变量 `ans/path` 多次调用会残留；更稳的是入口局部变量传引用。 | [查看](../leetcode-reviews/2026-06-01-113-path-sum-ii.md) |
+| `124. Binary Tree Maximum Path Sum` | 待提交验证，源码逻辑检查通过 | 已经区分“向父节点返回的单边贡献”和“当前节点合并两侧更新的全局答案”。 | 可以把负贡献显式截断为 0，让公式更稳定、更好迁移。 | [查看](../leetcode-reviews/2026-06-01-124-binary-tree-maximum-path-sum.md) |
+
+- 暴露问题：今天整体质量很好，尤其是 124 已经抓住困难树题的核心分工。主要复盘点是减少成员变量残留风险，并把“负贡献不向上延伸”写成固定模板。
+- 下一步安排：进入第 7 天综合复盘与结构迁移。建议按计划做 `572. Subtree of Another Tree`、`105. Construct Binary Tree from Preorder and Inorder Traversal`、`437. Path Sum III`，把双树比较、构造和路径统计收束到一轮复盘里。

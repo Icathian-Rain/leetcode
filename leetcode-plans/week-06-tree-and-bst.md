@@ -390,3 +390,19 @@ class Solution {
 
 - 暴露问题：今天整体质量很好，尤其是 124 已经抓住困难树题的核心分工。主要复盘点是减少成员变量残留风险，并把“负贡献不向上延伸”写成固定模板。
 - 下一步安排：进入第 7 天综合复盘与结构迁移。建议按计划做 `572. Subtree of Another Tree`、`105. Construct Binary Tree from Preorder and Inorder Traversal`、`437. Path Sum III`，把双树比较、构造和路径统计收束到一轮复盘里。
+
+## 进度更新 - 2026-06-03
+
+- 今日完成：`572. Subtree of Another Tree`、`105. Construct Binary Tree from Preorder and Inorder Traversal`、`437. Path Sum III`
+- 当前主题：第 7 天 - 综合复盘与结构迁移
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `572. Subtree of Another Tree` | 待提交验证，源码逻辑检查通过 | 能把 `Same Tree` 的双树比较嵌入整棵树搜索，结构判断完整。 | 朴素匹配最坏 `O(n*m)`；布尔递归建议用短路 `||`。 | [查看](../leetcode-reviews/2026-06-03-572-subtree-of-another-tree.md) |
+| `105. Construct Binary Tree from Preorder and Inorder Traversal` | 待提交验证，源码逻辑检查通过 | 半开区间定义清楚，能正确由前序根和中序位置切分左右子树。 | 每次线性扫描中序位置，退化情况下会到 `O(n^2)`；可预处理下标。 | [查看](../leetcode-reviews/2026-06-03-105-construct-binary-tree-from-preorder-and-inorder-traversal.md) |
+| `437. Path Sum III` | 有提交风险，核心算法正确 | 已命中前缀和计数 + 回溯模板，能一次 DFS 统计所有合法路径。 | 源码保留 `cout` 调试输出，且成员状态多次调用可能残留；提交前必须处理。 | [查看](../leetcode-reviews/2026-06-03-437-path-sum-iii.md) |
+
+- 暴露问题：今天三题覆盖的是综合迁移，不共享单一通用模板，因此不强行沉淀一个大而泛的模板。主要问题集中在两类：一是最优复杂度意识，`572/105` 都可以通过预处理或序列化匹配减少重复工作；二是提交稳定性，`437` 的调试输出会直接污染结果。
+- 下一步安排：第 6 周树专题可以进入总复盘。建议先把 `437` 的提交版本清理干净，再从 `572` 的双树比较、`105` 的构造区间、`437` 的路径前缀状态各挑一个小样例手推，确认自己能说清函数返回值和当前层维护的状态。

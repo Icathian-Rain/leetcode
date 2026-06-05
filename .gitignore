@@ -19,3 +19,5 @@ Thumbs.db
 src/.lcpr_data/
 
 .opencode/
+
+bin/*

@@ -127,3 +127,57 @@ public:
 
 - 暴露问题：今天的核心动作已经成型：选择、递归、撤销都写出来了。主要需要补强两个习惯：先判断空输入的题意返回值；尽量把 `ans/path` 放在入口局部变量里，避免 LeetCode 同一对象多次调用时残留。
 - 下一步安排：进入第 2 天固定长度与组合边界。下一组题会把“随便枚举所有结果”推进到“选择数量、目标值和起点范围一起受限制”，重点观察递归参数如何同时表达深度和剩余约束。
+
+## 进度更新 - 2026-06-05
+
+- 今日完成：`77. Combinations`、`216. Combination Sum III`、`39. Combination Sum`
+- 当前主题：第 2 天 - 固定长度与组合边界
+
+### 通用解题模板
+
+- 适用条件：题目要求生成组合结果，并且每一层都从一个有序可选范围中继续选择；结果不关心排列顺序，需要通过起点控制避免重复。
+- 核心骨架：维护当前路径 `path`；递归参数至少包含下一次选择起点 `start`，并按题意增加剩余数量 `left` 或剩余目标 `remain`；选择后递归，返回前撤销。
+- 关键边界：固定长度题要在长度满足时收集；目标和题推荐用 `remain` 表达剩余目标；`i + 1` 表示当前数字不能再用，`i` 表示当前数字可以重复使用；成员变量要初始化或改成局部变量。
+- 复杂度：时间与搜索树规模和答案复制成本相关；固定长度组合为 `O(C(n,k)*k)`，目标和组合为输出敏感复杂度；空间为递归深度和当前路径长度。
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> combinationTemplate(vector<int>& nums, int target) {
+        sort(nums.begin(), nums.end());
+
+        vector<vector<int>> result;
+        vector<int> path;
+
+        function<void(int, int)> dfs = [&](int start, int remain) {
+            if (remain == 0) {
+                result.push_back(path);
+                return;
+            }
+
+            for (int i = start; i < static_cast<int>(nums.size()); ++i) {
+                if (nums[i] > remain) {
+                    break;
+                }
+                path.push_back(nums[i]);
+                dfs(i, remain - nums[i]); // 改成 i + 1 时，表示当前数字不能重复使用。
+                path.pop_back();
+            }
+        };
+
+        dfs(0, target);
+        return result;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `77. Combinations` | 待提交验证，源码逻辑检查通过 | 能用 `start` 控制组合顺序，并写出 `n - need + 1` 的数量剪枝。 | `ans/comb` 是成员变量，建议入口局部化，避免多次调用残留。 | [查看](../leetcode-reviews/2026-06-05-77-combinations.md) |
+| `216. Combination Sum III` | 有主要风险，递归主体正确 | 能同时维护数量、起点和目标和，并用 `i + 1` 保证数字不重复。 | `sum` 成员变量未初始化；循环上界不应把目标和 `n` 当作数字范围。 | [查看](../leetcode-reviews/2026-06-05-216-combination-sum-iii.md) |
+| `39. Combination Sum` | 有主要风险，核心方向正确 | 能抓住递归传 `i` 表示当前数字可重复使用，也能用 `start` 避免排列重复。 | `sum` 成员变量未初始化；建议排序后用 `remain` 剪枝。 | [查看](../leetcode-reviews/2026-06-05-39-combination-sum.md) |
+
+- 暴露问题：今天已经把组合题最核心的起点推进写出来了，尤其是能区分 `i + 1` 和 `i` 的含义。主要风险集中在“把数值状态放成员变量但没有初始化”，以及“循环上界到底由数量范围决定，还是由目标和决定”这两点。
+- 下一步安排：进入第 3 天排列与使用状态。下一组题会从“组合只向后选”切换到“每个位置都可能选择任意未使用元素”，重点观察递归参数从 `start` 变成使用状态后，重复结果是如何被控制的。

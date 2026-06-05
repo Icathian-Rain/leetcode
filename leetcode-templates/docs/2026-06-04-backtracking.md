@@ -23,6 +23,61 @@
 3. 在当前层枚举选择；每次先做选择，再递归进入下一层，返回后撤销选择，让同层下一个分支看到干净状态。
 4. 根据题意决定收集答案的时机：子集类可以每个递归节点都收集，排列和固定长度组合通常在路径长度满足要求时收集。
 
+## 回溯的两种递归形态
+
+### 写法一：`for` 循环填充下一个位置
+
+- 递归含义：当前递归层负责“给路径的下一个位置选一个值”。
+- 典型参数：`start` 表示这一层可以从哪里开始选；组合题用它避免重复顺序，排列题通常换成 `used` 标记。
+- 适用题型：组合、排列、切分、棋盘放置、路径搜索，以及每一层有多个候选项的问题。
+- 收集时机：固定长度组合和排列通常在 `path.size()` 达到目标时收集；子集也可以在每个递归节点先收集一次。
+- 易错点：循环上界要保证剩余数量够用；递归参数传 `i + 1` 表示当前元素不能再用，传 `i` 表示当前元素可以重复使用。
+
+```cpp
+void dfs(int start) {
+    if (path.size() == targetSize) {
+        ans.push_back(path);
+        return;
+    }
+
+    for (int i = start; i < static_cast<int>(nums.size()); ++i) {
+        path.push_back(nums[i]);
+        dfs(i + 1);      // 组合：下一层只能从后面继续选。
+        path.pop_back(); // 撤销后，继续尝试同层下一个候选。
+    }
+}
+```
+
+### 写法二：选或者不选
+
+- 递归含义：当前递归层只处理一个位置 `index`，决策是“选它”或“不选它”。
+- 典型参数：`index` 表示正在考虑哪个元素；每次递归都推进到 `index + 1`。
+- 适用题型：子集、01 选择、每个元素最多使用一次且选择分支天然是二叉的问题。
+- 收集时机：通常在 `index == nums.size()` 时收集，因为这时每个元素都已经做完“选 / 不选”决策。
+- 易错点：选的分支需要 `push_back` 后再 `pop_back`；不选分支不能修改路径；如果题目要求固定长度或目标和，可以在递归中加入剪枝。
+
+```cpp
+void dfs(int index) {
+    if (index == static_cast<int>(nums.size())) {
+        ans.push_back(path);
+        return;
+    }
+
+    path.push_back(nums[index]); // 选当前元素。
+    dfs(index + 1);
+    path.pop_back();
+
+    dfs(index + 1); // 不选当前元素。
+}
+```
+
+### 怎么选择
+
+- 如果题目问“下一步可以从一组候选里挑谁”，优先用 `for` 循环写法。
+- 如果题目问“每个元素只有选或不选两种状态”，可以用选 / 不选写法。
+- `for` 写法通常更容易加入 `start`、数量剪枝、目标和剪枝和同层去重；选 / 不选写法更贴近二叉决策树，适合理解子集和 01 选择。
+- 两种写法搜索到的状态空间可能等价，但递归参数的含义不同。写题前先说清楚：当前层是在“填下一个位置”，还是在“处理当前元素”。
+
 ## 关键边界
 
 - 空输入不总是同一种返回：`Subsets` 应包含空集，`Letter Combinations` 的空字符串应返回空数组。
@@ -53,6 +108,19 @@ private:
             subsetDfs(nums, i + 1);
             path.pop_back(); // 撤销当前选择，继续尝试同层下一个元素。
         }
+    }
+
+    void chooseOrSkipSubsetDfs(vector<int>& nums, int index) {
+        if (index == static_cast<int>(nums.size())) {
+            ans.push_back(path);
+            return;
+        }
+
+        path.push_back(nums[index]); // 选当前元素。
+        chooseOrSkipSubsetDfs(nums, index + 1);
+        path.pop_back();
+
+        chooseOrSkipSubsetDfs(nums, index + 1); // 不选当前元素。
     }
 
     void combinationDfs(int n, int k, int start) {
@@ -96,6 +164,13 @@ public:
         return ans;
     }
 
+    vector<vector<int>> subsetsChooseOrSkipTemplate(vector<int>& nums) {
+        ans.clear();
+        path.clear();
+        chooseOrSkipSubsetDfs(nums, 0);
+        return ans;
+    }
+
     vector<vector<int>> combinationsTemplate(int n, int k) {
         ans.clear();
         path.clear();
@@ -120,6 +195,12 @@ public:
 - 输入：`nums = [1,2,3]`
 - 输出：`subsetsTemplate(nums)` 生成 `[] [1] [1,2] [1,2,3] [1,3] [2] [2,3] [3]`
 - 说明：每进入一个递归节点就收集当前路径，因此空路径和所有长度的路径都会成为答案。
+
+### 样例 1 补充
+
+- 输入：`nums = [1,2,3]`
+- 输出：`subsetsChooseOrSkipTemplate(nums)` 生成 8 个子集，例如 `[1,2,3] [1,2] [1,3] [1] [2,3] [2] [3] []`
+- 说明：每个元素依次做“选 / 不选”决策，直到 `index == nums.size()` 时才收集完整决策结果。
 
 ### 样例 2
 

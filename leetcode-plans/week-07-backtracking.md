@@ -181,3 +181,63 @@ public:
 
 - 暴露问题：今天已经把组合题最核心的起点推进写出来了，尤其是能区分 `i + 1` 和 `i` 的含义。主要风险集中在“把数值状态放成员变量但没有初始化”，以及“循环上界到底由数量范围决定，还是由目标和决定”这两点。
 - 下一步安排：进入第 3 天排列与使用状态。下一组题会从“组合只向后选”切换到“每个位置都可能选择任意未使用元素”，重点观察递归参数从 `start` 变成使用状态后，重复结果是如何被控制的。
+
+## 进度更新 - 2026-06-13
+
+- 今日完成：`46. Permutations`、`47. Permutations II`、`31. Next Permutation`
+- 当前主题：第 3 天 - 排列与使用状态
+
+### 通用解题模板
+
+- 适用条件：题目要求生成所有排列，或者每一层都要给当前位置选择一个尚未使用的元素；如果存在重复值，需要保证同一层不重复选择等价分支。
+- 核心骨架：维护 `path` 表示当前排列前缀，维护 `used/visited` 表示哪些下标已经进入路径；每层遍历所有下标，选择未使用元素，递归后撤销路径和使用状态。
+- 关键边界：路径长度达到 `nums.size()` 时收集答案；重复排列题先排序，再用 `i > 0 && nums[i] == nums[i - 1] && !used[i - 1]` 跳过同层重复；成员变量状态要清空或局部化。
+- 复杂度：无重复排列时间 `O(n*n!)`，空间 `O(n)`；重复排列最坏仍为 `O(n*n!)`，但同层去重会减少实际分支数量。
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> permuteTemplate(vector<int>& nums) {
+        sort(nums.begin(), nums.end());
+
+        vector<vector<int>> result;
+        vector<int> path;
+        vector<bool> used(nums.size(), false);
+
+        function<void()> dfs = [&]() {
+            if (path.size() == nums.size()) {
+                result.push_back(path);
+                return;
+            }
+
+            for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+                if (used[i]) {
+                    continue;
+                }
+                if (i > 0 && nums[i] == nums[i - 1] && !used[i - 1]) {
+                    continue; // 同一层跳过重复值代表，避免重复排列。
+                }
+                used[i] = true;
+                path.push_back(nums[i]);
+                dfs();
+                path.pop_back();
+                used[i] = false;
+            }
+        };
+
+        dfs();
+        return result;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `46. Permutations` | 待提交验证，源码逻辑检查通过 | 能用 `used` 标记元素是否已进入路径，选择和撤销动作完整。 | 成员变量状态没有入口清空，建议局部化；`vector<int>` 可换成更贴切的布尔状态。 | [查看](../leetcode-reviews/2026-06-13-46-permutations.md) |
+| `47. Permutations II` | 待提交验证，源码逻辑检查通过 | 正确使用排序和 `!used[i - 1]` 做同层去重。 | `backtrace(vector<int> nums)` 按值传参会重复复制数组，建议改为引用或局部 lambda。 | [查看](../leetcode-reviews/2026-06-13-47-permutations-ii.md) |
+| `31. Next Permutation` | 待提交验证，源码逻辑检查通过 | 已写出标准的找主元、找后继、反转后缀流程。 | 重点复盘为什么主元右侧必然降序，以及为什么反转后缀能得到最小增量。 | [查看](../leetcode-reviews/2026-06-13-31-next-permutation.md) |
+
+- 暴露问题：排列回溯的核心动作已经稳定，尤其是 `used` 的选择/撤销和重复排列的同层去重。主要改进点是把成员变量状态局部化、避免递归中按值复制大对象，并能用语言解释 `!used[i - 1]` 代表“同一层去重”。
+- 下一步安排：进入第 4 天重复元素与结果去重。下一组题会把今天的同层去重迁移到子集、组合和序列题里，重点观察“排序后同层跳过”和“不改变原顺序时每层去重”的差异。

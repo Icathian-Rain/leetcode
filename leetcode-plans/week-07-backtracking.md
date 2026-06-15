@@ -241,3 +241,54 @@ public:
 
 - 暴露问题：排列回溯的核心动作已经稳定，尤其是 `used` 的选择/撤销和重复排列的同层去重。主要改进点是把成员变量状态局部化、避免递归中按值复制大对象，并能用语言解释 `!used[i - 1]` 代表“同一层去重”。
 - 下一步安排：进入第 4 天重复元素与结果去重。下一组题会把今天的同层去重迁移到子集、组合和序列题里，重点观察“排序后同层跳过”和“不改变原顺序时每层去重”的差异。
+
+## 进度更新 - 2026-06-15
+
+- 今日完成：`90. Subsets II`、`40. Combination Sum II`、`491. Non-decreasing Subsequences`
+- 当前主题：第 4 天 - 重复元素与结果去重
+
+### 通用解题模板
+
+- 适用条件：输入中可能有重复值，题目要求结果不能重复；每层递归都要避免从等价候选开始生成相同结果。
+- 核心骨架：如果题目允许重排输入，先排序，再用 `i > start && nums[i] == nums[i - 1]` 做同层去重；如果题目必须保留原顺序，则每层新建一个集合记录本层已经尝试过的数值。
+- 关键边界：同层去重只跳过兄弟分支，不阻止下一层继续使用相同值；组合题的 `i + 1` 表示每个位置最多使用一次；子序列题不能排序，否则会破坏原顺序。
+- 复杂度：时间通常为 `O(n*2^n)` 级别，空间为递归深度 `O(n)`，不计返回结果。
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> dedupTemplate(vector<int>& nums) {
+        sort(nums.begin(), nums.end());
+
+        vector<vector<int>> result;
+        vector<int> path;
+
+        function<void(int)> dfs = [&](int start) {
+            result.push_back(path);
+
+            for (int i = start; i < static_cast<int>(nums.size()); ++i) {
+                if (i > start && nums[i] == nums[i - 1]) {
+                    continue; // 只跳过同一层重复分支。
+                }
+                path.push_back(nums[i]);
+                dfs(i + 1);
+                path.pop_back();
+            }
+        };
+
+        dfs(0);
+        return result;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `90. Subsets II` | 待提交验证，源码逻辑检查通过 | 能用排序和 `i > idx` 做同层去重，每个递归节点收集子集的时机正确。 | 成员变量复用有残留风险；重点复盘 `idx` 为什么代表当前层边界。 | [查看](../leetcode-reviews/2026-06-15-90-subsets-ii.md) |
+| `40. Combination Sum II` | 待提交验证，源码逻辑检查通过 | 能把同层去重、目标递减和 `i + 1` 组合起来，表达每个位置只能使用一次。 | 排序后可以补 `candidates[i] > target` 的提前停止，减少无效分支。 | [查看](../leetcode-reviews/2026-06-15-40-combination-sum-ii.md) |
+| `491. Non-decreasing Subsequences` | 待提交验证，源码逻辑检查通过 | 能意识到不能排序，并改用每层 `unordered_set` 做局部去重。 | 重点复盘“本层集合”和“全局集合”的区别，以及为什么集合不能跨层复用。 | [查看](../leetcode-reviews/2026-06-15-491-non-decreasing-subsequences.md) |
+
+- 暴露问题：今天的同层去重已经比较成型，尤其是能区分“可排序后相邻去重”和“必须保留原顺序时用每层集合”。主要改进点仍是把成员变量状态局部化，并在目标和题中利用排序进一步剪枝。
+- 下一步安排：进入第 5 天字符串切分与格式约束。下一组题会把“选择一个元素”切换成“选择一段字符串”，重点观察切分边界、段合法性和递归停止条件。

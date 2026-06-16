@@ -472,3 +472,60 @@ for (int i = start; i < static_cast<int>(nums.size()); ++i) {
 | 非回溯排列构造 | `31` |
 
 最重要的迁移句：`start` 解决“组合 / 子集只往后选”，`used` 解决“排列中每个位置都能选任意未用元素”，`i > start` 解决“排序后的同层去重”，每层 `set` 解决“不能排序但仍要同层去重”。
+
+## 进度更新 - 2026-06-16
+
+- 今日完成：`131. Palindrome Partitioning`、`93. Restore IP Addresses`、`22. Generate Parentheses`
+- 当前主题：第 5 天 - 字符串切分与格式约束
+
+### 通用解题模板
+
+- 适用条件：题目要求把字符串切成若干段，或者在生成字符串时持续保持格式合法；每一层都要先判断当前候选段或前缀是否合法。
+- 核心骨架：递归参数记录当前位置 `start` 或已经使用的计数；路径保存已经切出的段或生成出的前缀；枚举下一段结束位置或下一种字符，合法才进入下一层。
+- 关键边界：切分题要在 `start == s.size()` 且段数满足时收集；固定段数题要剪掉剩余字符过少或过多的分支；生成题要保证每个前缀都合法，而不是生成后再筛。
+- 复杂度：通常与合法方案数相关；切分题最坏指数级，固定段数 IP 题搜索空间为常数级，括号生成规模为卡特兰数。
+
+```cpp
+class Solution {
+public:
+    vector<vector<string>> splitTemplate(string s) {
+        vector<vector<string>> result;
+        vector<string> path;
+
+        auto valid = [&](int left, int right) {
+            // 按题意检查 s[left..right] 是否是一段合法内容。
+            return left <= right;
+        };
+
+        function<void(int)> dfs = [&](int start) {
+            if (start == static_cast<int>(s.size())) {
+                result.push_back(path);
+                return;
+            }
+
+            for (int end = start; end < static_cast<int>(s.size()); ++end) {
+                if (!valid(start, end)) {
+                    continue;
+                }
+                path.push_back(s.substr(start, end - start + 1));
+                dfs(end + 1);
+                path.pop_back();
+            }
+        };
+
+        dfs(0);
+        return result;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `131. Palindrome Partitioning` | 待提交验证，源码逻辑检查通过 | 能用 DP 预处理回文段，再用 `start` 枚举下一段终点。 | `dfs(string s, ...)` 按值传参会重复复制字符串；成员变量也有复用风险。 | [查看](../leetcode-reviews/2026-06-16-131-palindrome-partitioning.md) |
+| `93. Restore IP Addresses` | 待提交验证，源码逻辑检查通过 | 前导零和值域判断清楚，能保证正好 4 段且用完整个字符串。 | 可以补剩余字符数剪枝，并显式限制每段最多 3 位。 | [查看](../leetcode-reviews/2026-06-16-93-restore-ip-addresses.md) |
+| `22. Generate Parentheses` | 待提交验证，源码逻辑检查通过 | 能用 `left > right` 控制右括号合法性，只生成合法前缀。 | 推荐局部化状态；常见写法先尝试左括号，再在 `right < left` 时尝试右括号。 | [查看](../leetcode-reviews/2026-06-16-22-generate-parentheses.md) |
+
+- 暴露问题：今天已经能把“下一段是否合法”放到递归入口前判断，尤其是回文段、IP 段和括号前缀都没有靠结果后筛。主要改进点是继续局部化状态、避免字符串按值传递，并在固定段数切分题里主动做剩余长度剪枝。
+- 下一步安排：进入第 6 天网格搜索与棋盘约束。下一组题会把字符串上的合法前缀判断迁移到二维空间和棋盘状态，重点观察访问标记、恢复现场和多约束剪枝。

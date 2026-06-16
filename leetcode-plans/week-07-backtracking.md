@@ -292,3 +292,183 @@ public:
 
 - 暴露问题：今天的同层去重已经比较成型，尤其是能区分“可排序后相邻去重”和“必须保留原顺序时用每层集合”。主要改进点仍是把成员变量状态局部化，并在目标和题中利用排序进一步剪枝。
 - 下一步安排：进入第 5 天字符串切分与格式约束。下一组题会把“选择一个元素”切换成“选择一段字符串”，重点观察切分边界、段合法性和递归停止条件。
+
+## 前四天模板分类复盘
+
+这 12 道题可以按“递归状态到底在表达什么”重新分组。复盘时不要只按日期记题，而要先判断当前题更像哪一种模板。
+
+### 1. 小规模枚举 / 位状态枚举
+
+| 模板 | 题目 | 共同点 |
+| --- | --- | --- |
+| 固定范围枚举，统计合法状态 | `401. Binary Watch` | 搜索空间很小，可以直接枚举所有状态，再判断是否合法。 |
+
+这题更像回溯热身，不一定要写标准 `path + dfs`。重点是把“枚举所有可能状态，再筛合法结果”这件事写清楚。
+
+### 2. 子集模板：每个节点都收集答案
+
+| 模板 | 题目 | 共同点 |
+| --- | --- | --- |
+| `dfs(start)`，进入递归节点就收集当前 `path` | `78. Subsets`、`90. Subsets II` | 当前路径本身就是一个合法子集，不需要等到叶子节点。 |
+
+- `78`：无重复元素，直接从 `start` 往后选。
+- `90`：有重复元素，先排序，同层用 `i > start && nums[i] == nums[i - 1]` 去重。
+
+```cpp
+void dfs(int start) {
+    ans.push_back(path);
+
+    for (int i = start; i < static_cast<int>(nums.size()); ++i) {
+        if (i > start && nums[i] == nums[i - 1]) {
+            continue; // 有重复元素时加这一句。
+        }
+        path.push_back(nums[i]);
+        dfs(i + 1);
+        path.pop_back();
+    }
+}
+```
+
+### 3. 组合模板：固定长度 / 从有序范围选若干个
+
+| 模板 | 题目 | 共同点 |
+| --- | --- | --- |
+| `dfs(start)`，路径长度达到目标才收集 | `77. Combinations`、`216. Combination Sum III` | 组合只关心选择集合，不关心排列顺序，所以每次往后选。 |
+
+- `77`：只限制选 `k` 个。
+- `216`：同时限制选 `k` 个，并且和为 `n`。
+
+```cpp
+void dfs(int start) {
+    if (static_cast<int>(path.size()) == k) {
+        ans.push_back(path);
+        return;
+    }
+
+    int need = k - static_cast<int>(path.size());
+    for (int value = start; value <= upper - need + 1; ++value) {
+        path.push_back(value);
+        dfs(value + 1);
+        path.pop_back();
+    }
+}
+```
+
+`216` 在这个基础上多维护剩余数量和剩余目标：
+
+```cpp
+dfs(value + 1, left - 1, remain - value);
+```
+
+### 4. 组合总和模板：目标和 + 起点控制
+
+| 模板 | 题目 | 共同点 |
+| --- | --- | --- |
+| `dfs(start, remain)` | `39. Combination Sum`、`40. Combination Sum II` | 都是从候选数组里选数凑目标，用 `remain` 表示剩余目标。 |
+
+| 题目 | 当前数字能否重复使用 | 递归下一层 |
+| --- | --- | --- |
+| `39. Combination Sum` | 可以重复使用 | `dfs(i, remain - candidates[i])` |
+| `40. Combination Sum II` | 每个位置只能用一次 | `dfs(i + 1, remain - candidates[i])` |
+
+`40` 还有重复元素，需要排序后同层去重：
+
+```cpp
+if (i > start && candidates[i] == candidates[i - 1]) {
+    continue;
+}
+```
+
+### 5. 排列模板：每个位置选择一个未使用元素
+
+| 模板 | 题目 | 共同点 |
+| --- | --- | --- |
+| `used[i]` / `visited[i]` 标记位置是否已用 | `46. Permutations`、`47. Permutations II` | 每一层是在“填排列的下一个位置”，所以每层都从 `0` 扫到 `n - 1`。 |
+
+- `46`：无重复元素，只需要 `used`。
+- `47`：有重复元素，先排序，再同层去重。
+
+```cpp
+void dfs() {
+    if (path.size() == nums.size()) {
+        ans.push_back(path);
+        return;
+    }
+
+    for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+        if (used[i]) {
+            continue;
+        }
+        if (i > 0 && nums[i] == nums[i - 1] && !used[i - 1]) {
+            continue; // 排列题的同层去重。
+        }
+
+        used[i] = true;
+        path.push_back(nums[i]);
+        dfs();
+        path.pop_back();
+        used[i] = false;
+    }
+}
+```
+
+### 6. 保留原顺序的子序列模板
+
+| 模板 | 题目 | 共同点 |
+| --- | --- | --- |
+| `dfs(start)` + 每层 `unordered_set` 去重 | `491. Non-decreasing Subsequences` | 不能排序，因为子序列必须保持原数组顺序。 |
+
+可排序题通常使用相邻元素同层去重：
+
+```cpp
+sort(nums.begin(), nums.end());
+if (i > start && nums[i] == nums[i - 1]) {
+    continue;
+}
+```
+
+不能排序时，每一层单独记录已经尝试过的数值：
+
+```cpp
+unordered_set<int> usedThisLevel;
+for (int i = start; i < static_cast<int>(nums.size()); ++i) {
+    if (usedThisLevel.count(nums[i])) {
+        continue;
+    }
+    if (!path.empty() && nums[i] < path.back()) {
+        continue;
+    }
+
+    usedThisLevel.insert(nums[i]);
+    path.push_back(nums[i]);
+    dfs(i + 1);
+    path.pop_back();
+}
+```
+
+### 7. 非回溯排列构造模板
+
+| 模板 | 题目 | 共同点 |
+| --- | --- | --- |
+| 字典序局部调整 | `31. Next Permutation` | 不生成所有排列，只原地构造下一个排列。 |
+
+固定步骤：
+
+1. 从右往左找第一个 `nums[i] < nums[i + 1]` 的主元。
+2. 从右往左找第一个大于主元的数。
+3. 交换二者。
+4. 反转主元右侧后缀。
+
+### 总表
+
+| 大类 | 题目 |
+| --- | --- |
+| 小规模枚举 | `401` |
+| 子集：每个节点收集 | `78`、`90` |
+| 固定长度组合 | `77`、`216` |
+| 目标和组合 | `39`、`40` |
+| 排列 + `used` | `46`、`47` |
+| 保序子序列 + 每层集合 | `491` |
+| 非回溯排列构造 | `31` |
+
+最重要的迁移句：`start` 解决“组合 / 子集只往后选”，`used` 解决“排列中每个位置都能选任意未用元素”，`i > start` 解决“排序后的同层去重”，每层 `set` 解决“不能排序但仍要同层去重”。

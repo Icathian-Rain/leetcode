@@ -82,3 +82,43 @@
 - 第 5 天：进入序列关系，要求每个格子的含义能口头解释。
 - 第 6 天：集中处理字符串前缀，尤其是非法字符、空前缀和切分位置。
 - 第 7 天：做综合迁移，允许慢一点，但必须能说出为什么当前状态足够表达答案。
+
+## 进度更新 - 2026-06-19
+
+- 今日完成：`70. Climbing Stairs`、`746. Min Cost Climbing Stairs`、`198. House Robber`
+- 当前主题：动态规划 / 一维状态
+
+### 通用解题模板
+
+- 适用条件：题目要求按顺序处理位置、台阶、房屋或前缀，当前位置的答案只依赖前面固定数量的结果。
+- 核心骨架：先明确 `dp[i]` 的含义，再写初始化；如果每次只依赖前一项或前两项，先用数组确认转移，再压缩成滚动变量。
+- 关键边界：`dp[0]` 是否表示空前缀或起点；返回的是最后一个位置、楼顶位置，还是最后两个位置的最优值；付费或选择发生在“到达”还是“离开”。
+- 复杂度：时间通常为 `O(n)`；完整表空间为 `O(n)`，滚动变量可降为 `O(1)`。
+
+```cpp
+class Solution {
+public:
+    int linearDpExample(vector<int>& nums) {
+        int bestTwoBack = 0;
+        int bestOneBack = 0;
+        for (int value : nums) {
+            // 根据题意决定当前位置是否接在前一项或前两项之后。
+            int current = max(bestOneBack, bestTwoBack + value);
+            bestTwoBack = bestOneBack;
+            bestOneBack = current;
+        }
+        return bestOneBack;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `70. Climbing Stairs` | 通过 | `dp[i]` 状态定义清楚，初始化能自然覆盖基础边界 | 可继续练习把只依赖前两项的状态压缩成滚动变量 | [查看](../leetcode-reviews/2026-06-19-70-climbing-stairs.md) |
+| `746. Min Cost Climbing Stairs` | 通过 | 能处理起点选择和最后跨上楼顶的比较 | 当前 `dp` 下标和台阶编号错开一位，建议用“到达第 i 级”的定义重写 | [查看](../leetcode-reviews/2026-06-19-746-min-cost-climbing-stairs.md) |
+| `198. House Robber` | 通过 | 同时写出一维最优值和二维选/不选状态，说明相邻限制理解扎实 | 提交时可以收敛到一版，并用滚动变量减少特判和空间 | [查看](../leetcode-reviews/2026-06-19-198-house-robber.md) |
+
+- 暴露问题：整体已经能写出基本转移；下一步要把“状态到底表示哪个位置/前缀”说得更精确，尤其是 746 这种返回楼顶而不是某一级台阶的题。
+- 下一步安排：继续进入第 2 天，把一维状态迁移到二维位置累计。

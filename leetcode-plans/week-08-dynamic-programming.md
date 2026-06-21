@@ -163,3 +163,49 @@ public:
 
 - 暴露问题：整体二维状态已经比较稳；下一步重点是空间压缩时说清 `dp[col]` 更新前后的含义，避免在一维数组里混淆上一行和当前行。
 - 下一步安排：继续进入第 3 天，处理带额外选择约束的状态拆分。
+
+## 进度更新 - 2026-06-21
+
+- 今日完成：`213. House Robber II`、`740. Delete and Earn`、`790. Domino and Tromino Tiling`
+- 当前主题：动态规划 / 选择约束与相邻状态
+
+### 通用解题模板
+
+- 适用条件：题目在原始线性选择之外加入首尾相连、数值相邻冲突、缺口轮廓或多种行为状态，导致单个 `dp[i]` 不够直接表达所有限制。
+- 核心骨架：先判断能否把复杂限制拆成若干个线性子问题；如果不能拆，就把“当前处于什么状态”显式加入状态维度。
+- 关键边界：环形问题要处理 `n == 1`；数值冲突题要先聚合同值收益；多状态计数题要给每个状态命名，并确认初始状态代表空结构还是完整结构。
+- 复杂度：拆分线性问题通常时间 `O(n)`、空间可 `O(1)`；按值域聚合通常时间 `O(n + M)`；固定数量多状态通常时间 `O(n)`、空间 `O(1)`。
+
+```cpp
+class Solution {
+    int solveLinear(const vector<int>& nums, int left, int right) {
+        int bestTwoBack = 0;
+        int bestOneBack = 0;
+        for (int i = left; i <= right; i++) {
+            // 根据当前限制决定“选当前”和“不选当前”的来源。
+            int current = max(bestOneBack, bestTwoBack + nums[i]);
+            bestTwoBack = bestOneBack;
+            bestOneBack = current;
+        }
+        return bestOneBack;
+    }
+
+public:
+    int constrainedDpExample(vector<int>& nums) {
+        if (nums.size() == 1) return nums[0];
+        return max(solveLinear(nums, 0, static_cast<int>(nums.size()) - 2),
+                   solveLinear(nums, 1, static_cast<int>(nums.size()) - 1));
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `213. House Robber II` | 通过 | 能把环形首尾限制拆成两个线性范围，复用了第 1 天的相邻选择模型 | 两段线性 DP 代码重复，可抽成区间函数并压缩空间 | [查看](../leetcode-reviews/2026-06-21-213-house-robber-ii.md) |
+| `740. Delete and Earn` | 通过 | 成功把数值相邻冲突转成打家劫舍模型，并使用滚动变量 | `a/b/ans` 命名偏抽象，建议改成表达前两项和前一项的语义名 | [查看](../leetcode-reviews/2026-06-21-740-delete-and-earn.md) |
+| `790. Domino and Tromino Tiling` | 通过 | 四状态转移正确，取模处理完整，已经做到常数空间 | `dp[0..3]` 的状态编号需要改成语义状态，方便复盘和防止转移写反 | [查看](../leetcode-reviews/2026-06-21-790-domino-and-tromino-tiling.md) |
+
+- 暴露问题：今天的核心转移都写对了；主要改进点不是算法正确性，而是把“拆分后的线性范围”和“多状态编号”命名得更可解释。
+- 下一步安排：继续进入第 4 天，开始处理目标可达、容量边界和不可达状态。

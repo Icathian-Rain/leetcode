@@ -209,3 +209,43 @@ public:
 
 - 暴露问题：今天的核心转移都写对了；主要改进点不是算法正确性，而是把“拆分后的线性范围”和“多状态编号”命名得更可解释。
 - 下一步安排：继续进入第 4 天，开始处理目标可达、容量边界和不可达状态。
+
+## 进度更新 - 2026-06-24
+
+- 今日完成：`322. Coin Change`、`416. Partition Equal Subset Sum`、`494. Target Sum`
+- 当前主题：动态规划 / 目标可达与容量边界
+
+### 通用解题模板
+
+- 适用条件：题目要求凑出某个目标值、判断目标是否可达、求最少数量或统计方案数，并且每个输入元素存在“可重复使用”或“只能使用一次”的限制。
+- 核心骨架：先定义 `dp[target]` 表示最小代价、是否可达或方案数；再根据元素是否可重复决定容量遍历方向。
+- 关键边界：`dp[0]` 的含义必须明确；不可达状态要用哨兵或 `false` 表示；计数题初始化通常是 `dp[0] = 1`；每个元素只能用一次时容量倒序，可重复使用时容量正序。
+- 复杂度：常见时间为 `O(n * target)` 或 `O(target * n)`，空间可压缩为 `O(target)`。
+
+```cpp
+class Solution {
+public:
+    bool zeroOneReachable(vector<int>& nums, int target) {
+        vector<bool> dp(target + 1, false);
+        dp[0] = true;
+        for (int num : nums) {
+            // 每个 num 只能用一次，容量倒序。
+            for (int value = target; value >= num; value--) {
+                dp[value] = dp[value] || dp[value - num];
+            }
+        }
+        return dp[target];
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `322. Coin Change` | 通过 | 能用 `amount + 1` 作为不可达哨兵，返回值处理清楚 | 继续区分“可重复使用”对应容量正序，和 416/494 的倒序形成对照 | [查看](../leetcode-reviews/2026-06-24-322-coin-change.md) |
+| `416. Partition Equal Subset Sum` | 有实现风险 | 核心转换和倒序容量更新正确 | `maxNum` 未初始化会造成未定义行为，需初始化或删除该剪枝 | [查看](../leetcode-reviews/2026-06-24-416-partition-equal-subset-sum.md) |
+| `494. Target Sum` | 通过 | 能把符号选择转换成目标和方案数，`dp[0] = 1` 初始化正确 | 复盘时注意它和 416 的区别：一个是布尔可达，一个是方案计数 | [查看](../leetcode-reviews/2026-06-24-494-target-sum.md) |
+
+- 暴露问题：容量类题整体框架已经建立；最需要补强的是实现细节里的初始化纪律，尤其是局部变量必须有确定初值。
+- 下一步安排：继续进入第 5 天，处理子序列与双序列关系。

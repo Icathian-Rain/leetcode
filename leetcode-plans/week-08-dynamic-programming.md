@@ -249,3 +249,50 @@ public:
 
 - 暴露问题：容量类题整体框架已经建立；最需要补强的是实现细节里的初始化纪律，尤其是局部变量必须有确定初值。
 - 下一步安排：继续进入第 5 天，处理子序列与双序列关系。
+
+## 进度更新 - 2026-06-25
+
+- 今日完成：`300. Longest Increasing Subsequence`、`1143. Longest Common Subsequence`、`72. Edit Distance`、`91. Decode Ways`、`139. Word Break`、`115. Distinct Subsequences`
+- 当前主题：动态规划 / 子序列、双序列与字符串前缀
+
+### 通用解题模板
+
+- 适用条件：题目涉及一个序列的子序列选择、两个字符串前缀之间的关系、字符串能否按合法片段拆分，或统计从一个字符串形成另一个字符串的方案数。
+- 核心骨架：单序列题先判断状态是否表示“以当前位置结尾”；双序列题优先定义 `dp[i][j]` 为两个前缀或后缀之间的答案；字符串拆分题通常让 `dp[i]` 表示前 `i` 个字符是否合法或有多少方案。
+- 关键边界：空前缀经常是合法基础状态；双序列题的首行首列要表达空串关系；计数题要分清 `0` 种和 `1` 种基础方案；一维压缩时要明确左上角旧值是否会被覆盖。
+- 复杂度：双序列常见时间 `O(m*n)`；前缀切分常见时间 `O(n^2)` 或受最大词长限制；空间通常可从二维表压缩到一行。
+
+```cpp
+class Solution {
+public:
+    int twoSequenceDpExample(string a, string b) {
+        int m = static_cast<int>(a.size());
+        int n = static_cast<int>(b.size());
+        vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (a[i - 1] == b[j - 1]) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                } else {
+                    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);
+                }
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `300. Longest Increasing Subsequence` | 通过 | `dp[i]` 表示以当前位置结尾，严格递增条件处理正确 | 当前是 `O(n^2)`，建议补 `tails + lower_bound` 优化写法 | [查看](../leetcode-reviews/2026-06-25-300-longest-increasing-subsequence.md) |
+| `1143. Longest Common Subsequence` | 通过 | 双前缀状态和相等/不等分支都很标准 | 可进一步练习一维压缩时如何保存左上角旧值 | [查看](../leetcode-reviews/2026-06-25-1143-longest-common-subsequence.md) |
+| `72. Edit Distance` | 通过 | 首行首列初始化完整，三种操作来源表达准确 | 复盘时要能说清上、左、左上分别对应删除、插入、替换 | [查看](../leetcode-reviews/2026-06-25-72-edit-distance.md) |
+| `91. Decode Ways` | 通过 | 单字符和双字符合法性分开判断，`0` 的处理清楚 | 可压缩空间，并补测 `"0"`、`"10"`、`"100"` | [查看](../leetcode-reviews/2026-06-25-91-decode-ways.md) |
+| `139. Word Break` | 通过 | 前缀可拆状态明确，词典哈希使用正确 | `substr` 枚举有额外成本，可用最大词长减少无效尝试 | [查看](../leetcode-reviews/2026-06-25-139-word-break.md) |
+| `115. Distinct Subsequences` | 通过 | 后缀状态和空目标串边界都很稳，计数语义正确 | 可练一维倒序写法，理解它和二维后缀状态的等价关系 | [查看](../leetcode-reviews/2026-06-25-115-distinct-subsequences.md) |
+
+- 暴露问题：今天总体完成质量高；后续主要补强空间压缩时的“旧左上角”保存，以及区分布尔可达、最值和方案计数三类状态的初始化。
+- 下一步安排：继续进入第 7 天综合复盘，把单序列、多状态、容量、双序列几类 DP 放在一起做迁移。

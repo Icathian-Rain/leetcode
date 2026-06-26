@@ -296,3 +296,45 @@ public:
 
 - 暴露问题：今天总体完成质量高；后续主要补强空间压缩时的“旧左上角”保存，以及区分布尔可达、最值和方案计数三类状态的初始化。
 - 下一步安排：继续进入第 7 天综合复盘，把单序列、多状态、容量、双序列几类 DP 放在一起做迁移。
+
+## 进度更新 - 2026-06-26
+
+- 今日完成：`152. Maximum Product Subarray`、`309. Best Time to Buy and Sell Stock with Cooldown`、`312. Burst Balloons`
+- 当前主题：动态规划 / 综合复盘与区间意识
+
+### 通用解题模板
+
+- 适用条件：题目中的答案不能只由一个简单前缀状态表达，需要额外记录最大/最小、持有/不持有、冷冻/卖出、区间边界或最后一个操作位置。
+- 核心骨架：先问“当前状态是否足够表达未来转移”；如果不够，就增加状态维度；区间题优先考虑枚举最后一次操作，让左右边界固定。
+- 关键边界：单序列滚动状态必须保存旧值；多状态题要给每个状态命名；区间题要明确开闭区间和空区间返回值；补虚拟边界时要确认返回的是原问题完整区间。
+- 复杂度：单序列多状态通常 `O(n)`；固定行为状态可压缩到 `O(1)`；区间切分常见 `O(n^3)` 时间和 `O(n^2)` 空间。
+
+```cpp
+class Solution {
+public:
+    int intervalDpExample(vector<int>& nums) {
+        int n = static_cast<int>(nums.size());
+        vector<vector<int>> dp(n, vector<int>(n, 0));
+        for (int len = 2; len <= n; len++) {
+            for (int left = 0; left + len - 1 < n; left++) {
+                int right = left + len - 1;
+                for (int mid = left; mid <= right; mid++) {
+                    // 枚举区间里的关键切分点或最后一次操作位置。
+                }
+            }
+        }
+        return n == 0 ? 0 : dp[0][n - 1];
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `152. Maximum Product Subarray` | 通过 | 同时维护最大和最小结尾状态，正确处理负数翻转 | 复盘时要能解释为什么只维护最大值不够 | [查看](../leetcode-reviews/2026-06-26-152-maximum-product-subarray.md) |
+| `309. Best Time to Buy and Sell Stock with Cooldown` | 通过 | 能用多个状态表达持有、卖出、冷冻等行为结果 | 状态命名可进一步语义化，并压缩到常数空间 | [查看](../leetcode-reviews/2026-06-26-309-best-time-to-buy-and-sell-stock-with-cooldown.md) |
+| `312. Burst Balloons` | 通过 | 正确使用开区间和“最后戳”建模，记忆化避免重复计算 | 建议再写一遍自底向上的区间 DP，巩固区间长度遍历 | [查看](../leetcode-reviews/2026-06-26-312-burst-balloons.md) |
+
+- 暴露问题：本周最后一天整体表现很好；现在主要不是“会不会写转移”，而是要把状态语义、遍历顺序和边界返回值讲得足够稳定。
+- 下一步安排：第 8 周动态规划主线已完成。后续建议做一次总复盘，把题目按“一维最值 / 目标容量 / 双序列 / 多状态 / 区间”五类重新归档。

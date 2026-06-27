@@ -31,18 +31,25 @@ public:
     int maxProfit(vector<int>& prices) {
         int n=prices.size();
         vector<vector<int>> dp(n, vector<int>(4, 0));
-        // dp[i][0]: 买入i
-        // dp[i][1]: 保持i
-        // dp[i][2]: 卖出i
+        // dp[i][0]: 持有
+        // dp[i][1]: 可买入
+        // dp[i][2]: 卖出
         // dp[i][3]: 冷静期
         dp[0][0] = -prices[0];
+        dp[0][1] = 0;
+        dp[0][2] = INT_MIN / 2;
+        dp[0][3] = INT_MIN / 2;
         for(int i=1; i<n; i++) {
-            dp[i][0] = max(dp[i-1][0], max(dp[i-1][3], dp[i-1][1]) - prices[i]);
-            dp[i][1] = max({dp[i-1][1], dp[i-1][3]});
+            dp[i][0] = max({
+                dp[i-1][0],                         // 昨天就持有，今天继续持有
+                dp[i-1][1] - prices[i],             // 昨天可买入，今天买入
+                dp[i-1][3] - prices[i]              // 昨天冷静期结束，今天买入
+            });
+            dp[i][1] = max(dp[i-1][1], dp[i-1][3]);
             dp[i][2] = dp[i-1][0]+prices[i];
             dp[i][3] = dp[i-1][2];
         }
-        return max({dp[n-1][1], dp[n-1][2], dp[n-1][3]});
+        return max({dp[n - 1][1], dp[n - 1][2], dp[n - 1][3]});
     }
 };
 // @lc code=end

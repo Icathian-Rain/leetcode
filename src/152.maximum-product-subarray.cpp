@@ -28,7 +28,7 @@ class Solution {
     }
 
 public:
-    int maxProduct(vector<int>& nums) {
+    int s1(vector<int>& nums) {
         int n=nums.size();
         int mx = nums[0], mn = nums[0], ans = nums[0];
         for(int i=1; i<n; i++) {
@@ -39,6 +39,27 @@ public:
             ans = max(mx, ans);
         }
         return ans;
+    }
+
+    int s2(vector<int>& nums) {
+        int n=nums.size();
+        int mx = nums[0], mn = nums[0], ans = nums[0];
+        for(int i=1; i<n; i++) {
+            int num = nums[i];
+            if(num < 0) {
+                swap(mx, mn);
+            }
+            mx = max(mx*num, num);
+            mn = min(mn*num, num);
+            ans = max(mx, ans);
+        }
+        return ans;
+    }
+
+
+    int maxProduct(vector<int>& nums) {
+        // return s1(nums);
+        return s2(nums);
     }
 };
 // @lc code=end

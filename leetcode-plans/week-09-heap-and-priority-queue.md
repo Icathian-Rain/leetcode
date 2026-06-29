@@ -80,3 +80,43 @@
 - 第 5 天：集中攻数据流，允许慢一点，但要把两边平衡讲清楚。
 - 第 6 天：处理窗口和过期元素，重点练有效性判断。
 - 第 7 天：做方案取舍，比较排序、堆、双指针和其他已学模式。
+
+## 进度更新 - 2026-06-29
+
+- 今日完成：`703. Kth Largest Element in a Stream`、`1046. Last Stone Weight`、`215. Kth Largest Element in an Array`
+- 当前主题：堆与优先队列
+
+### 通用解题模板
+
+- 适用条件：题目只关心当前最大、最小、第 k 个、Top K 或每一步都要取出优先级最高的候选，而不需要完整排序所有元素。
+- 核心骨架：把候选放入堆；如果只关心前 k 个结果，就用固定大小堆维护必要候选；如果每轮都要取当前极值，就弹出堆顶并按题意把新状态放回。
+- 关键边界：固定大小堆超过 `k` 后要立刻弹出无用候选；反复取两个元素时循环条件应保证堆里至少有两个元素；返回前要处理堆为空的情况。
+- 复杂度：固定大小堆通常为时间 `O(n log k)`、空间 `O(k)`；反复取极值通常为时间 `O(n log n)`、空间 `O(n)`。
+
+```cpp
+class Solution {
+public:
+    int keepTopK(vector<int>& nums, int k) {
+        priority_queue<int, vector<int>, greater<int>> heap;
+        for (int num : nums) {
+            heap.push(num);
+            // 堆里只保留当前最大的 k 个候选。
+            if (heap.size() > k) {
+                heap.pop();
+            }
+        }
+        return heap.top();
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `703. Kth Largest Element in a Stream` | 通过倾向 | 用小根堆稳定维护前 `k` 大元素，构造和追加逻辑一致 | 复盘时要能说清堆顶为什么正好是第 `k` 大，而不是当前最小值 | [查看](../leetcode-reviews/2026-06-29-703-kth-largest-element-in-a-stream.md) |
+| `1046. Last Stone Weight` | 通过倾向 | 正确使用大根堆反复取出两块最重石头，空堆返回处理稳 | 可以把 `less<int>` 简化为默认写法，并删掉提交前调试痕迹 | [查看](../leetcode-reviews/2026-06-29-1046-last-stone-weight.md) |
+| `215. Kth Largest Element in an Array` | 通过倾向 | 同时写出了快速选择和固定大小堆两种方案，方案意识很好 | 当前提交选择堆方案，复盘时要比较它和快速选择在复杂度与稳定性上的取舍 | [查看](../leetcode-reviews/2026-06-29-215-kth-largest-element-in-an-array.md) |
+
+- 暴露问题：整体思路已经进入“维护必要候选”的节奏；下一步需要更主动地解释堆大小、堆顶语义和不同方案的复杂度取舍。
+- 下一步安排：继续第 2 天 Top K 与距离排序训练，把“固定大小堆”迁移到频次、距离和字典序规则上。

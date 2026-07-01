@@ -21,3 +21,5 @@ src/.lcpr_data/
 .opencode/
 
 bin/*
+
+test/

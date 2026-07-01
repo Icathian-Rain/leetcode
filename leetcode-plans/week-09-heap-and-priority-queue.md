@@ -120,3 +120,53 @@ public:
 
 - 暴露问题：整体思路已经进入“维护必要候选”的节奏；下一步需要更主动地解释堆大小、堆顶语义和不同方案的复杂度取舍。
 - 下一步安排：继续第 2 天 Top K 与距离排序训练，把“固定大小堆”迁移到频次、距离和字典序规则上。
+
+## 进度更新 - 2026-06-30
+
+- 今日完成：`973. K Closest Points to Origin`、`692. Top K Frequent Words`
+- 当前主题：堆与优先队列
+
+### 通用解题模板
+
+- 适用条件：题目要求从一批候选中找前 `k` 个，并且优先级不是单纯数值大小，而是距离、频次、字典序等复合规则。
+- 核心骨架：先把题目要求转成可比较的优先级；用固定大小堆保存当前最优的 `k` 个候选；堆顶放“当前保留集合里最应该淘汰的候选”。
+- 关键边界：比较器要反着服务于“淘汰谁”；同频、同距离等并列情况要按题目要求补第二关键字；如果弹出顺序和答案顺序相反，最后需要反转。
+- 复杂度：设候选数为 `n`，固定大小堆时间 `O(n log k)`，空间 `O(k)`；若需要先统计频次，额外统计时间 `O(n)`、空间 `O(m)`。
+
+```cpp
+class Solution {
+public:
+    vector<int> topKByScore(vector<pair<int, int>>& items, int k) {
+        auto worseFirst = [](const pair<int, int>& a, const pair<int, int>& b) {
+            return a.first > b.first;
+        };
+
+        priority_queue<pair<int, int>, vector<pair<int, int>>, decltype(worseFirst)> heap(worseFirst);
+        for (auto item : items) {
+            heap.push(item);
+            // 超过 k 时弹出当前最差候选。
+            if (heap.size() > k) {
+                heap.pop();
+            }
+        }
+
+        vector<int> ans;
+        while (!heap.empty()) {
+            ans.push_back(heap.top().second);
+            heap.pop();
+        }
+        reverse(ans.begin(), ans.end());
+        return ans;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `973. K Closest Points to Origin` | 通过倾向 | 能把点转换成距离和下标，并用固定大小大根堆淘汰最远候选 | 复盘时要说清比较器为什么让距离最大的点留在堆顶 | [查看](../leetcode-reviews/2026-06-30-973-k-closest-points-to-origin.md) |
+| `692. Top K Frequent Words` | 通过倾向 | 比较器同时处理频次和字典序，最后反转答案顺序，关键细节到位 | 这是本日最值得复盘的题：比较器写的是“谁更差”，不是“答案谁在前” | [查看](../leetcode-reviews/2026-06-30-692-top-k-frequent-words.md) |
+
+- 暴露问题：`973` 的优先级较单一，迁移顺畅；`692` 已经进入多关键字比较，后续要继续练“堆顶语义”和“答案顺序”分离。
+- 下一步安排：可先复做旧题 `347. Top K Frequent Elements` 补齐第 2 天三题闭环，再进入第 3 天多路合并训练。

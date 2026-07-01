@@ -170,3 +170,53 @@ public:
 
 - 暴露问题：`973` 的优先级较单一，迁移顺畅；`692` 已经进入多关键字比较，后续要继续练“堆顶语义”和“答案顺序”分离。
 - 下一步安排：可先复做旧题 `347. Top K Frequent Elements` 补齐第 2 天三题闭环，再进入第 3 天多路合并训练。
+
+## 进度更新 - 2026-07-01
+
+- 今日完成：`23. Merge k Sorted Lists`、`373. Find K Pairs with Smallest Sums`、`378. Kth Smallest Element in a Sorted Matrix`
+- 当前主题：堆与优先队列
+
+### 通用解题模板
+
+- 适用条件：输入由多个已经有序的来源组成，答案需要按全局从小到大的顺序逐步产生，且不适合一次性展开所有候选。
+- 核心骨架：每个来源先放入一个当前最小候选；每次弹出全局最小候选后，只推进它所属来源的下一个候选。
+- 关键边界：初始入堆时跳过空来源；弹出候选后必须检查该来源是否还有下一个位置；组合题要避免把同一状态重复加入堆。
+- 复杂度：若一共弹出 `t` 个结果、堆中最多维护 `k` 个来源，时间 `O(t log k)`，空间 `O(k)`。
+
+```cpp
+class Solution {
+public:
+    vector<int> mergeSources(vector<vector<int>>& sources) {
+        using State = tuple<int, int, int>; // value, source index, position
+        priority_queue<State, vector<State>, greater<State>> heap;
+        for (int i = 0; i < sources.size(); ++i) {
+            if (!sources[i].empty()) {
+                heap.push({sources[i][0], i, 0});
+            }
+        }
+
+        vector<int> ans;
+        while (!heap.empty()) {
+            auto [value, source, pos] = heap.top();
+            heap.pop();
+            ans.push_back(value);
+            // 只推进被弹出来源的下一个候选。
+            if (pos + 1 < sources[source].size()) {
+                heap.push({sources[source][pos + 1], source, pos + 1});
+            }
+        }
+        return ans;
+    }
+};
+```
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `23. Merge k Sorted Lists` | 通过倾向 | 正确把每条链表头节点放入小根堆，并在弹出后推进同一链表 | 复盘时要说清堆里保存的是节点指针，不是值拷贝 | [查看](../leetcode-reviews/2026-07-01-23-merge-k-sorted-lists.md) |
+| `373. Find K Pairs with Smallest Sums` | 通过倾向 | 只初始化每个 `nums1[i]` 搭配 `nums2[0]`，避免展开所有组合 | 重点复盘为什么只推进 `(i, j + 1)` 不会漏掉更小组合 | [查看](../leetcode-reviews/2026-07-01-373-find-k-pairs-with-smallest-sums.md) |
+| `378. Kth Smallest Element in a Sorted Matrix` | 通过倾向 | 能把每一行当作一个有序来源，逐步弹出第 `k` 小 | 本题还存在值域二分方案，复盘时比较堆解法和二分解法的适用场景 | [查看](../leetcode-reviews/2026-07-01-378-kth-smallest-element-in-a-sorted-matrix.md) |
+
+- 暴露问题：多路合并主线已经稳定；下一步要更主动地区分“候选来源推进”和“固定 Top K 淘汰”，这两类堆题虽然都用优先队列，但状态含义完全不同。
+- 下一步安排：进入第 4 天任务调度与冷却约束训练，重点观察候选被暂时禁用后如何重新回到可选集合。

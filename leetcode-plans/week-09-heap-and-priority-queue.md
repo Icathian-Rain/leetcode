@@ -257,3 +257,83 @@ public:
 
 - 暴露问题：你已经能把“堆取当前最高频”推进到“先判断最高频是否决定答案”的层次；后续要继续区分“需要构造过程”和“只需要最小长度/可行性”的题。
 - 下一步安排：第 4 天的 `358. Rearrange String k Distance Apart` 尚未确认完成，可作为这组频次约束的拔高复盘题；如果先进入第 5 天，则重点关注数据流中两个有序部分如何维持平衡。
+
+## 进度更新 - 2026-11-04
+
+- 今日完成：第 5 天 `295. Find Median from Data Stream`、`480. Sliding Window Median`、`1825. Finding MK Average`。
+- 判断依据：三份新增源码与第 5 天题单一致，公开接口均已实现；原实现和推荐版本已完成本地对拍。未读取到官方提交结果，以下“通过”均指本地验证。
+- 当前主题：堆与优先队列；今日主线为动态有序分段，从仅追加、窗口进出，推进到去掉两端后的中段统计。
+- 资料核对（2026-11-04）：[295 官方题目页](https://leetcode.cn/problems/find-median-from-data-stream/)、[480 官方题目页](https://leetcode.cn/problems/sliding-window-median/)、[1825 官方题目页](https://leetcode.cn/problems/finding-mk-average/)；480 的完整整数范围补充核对[国际版约束](https://leetcode.com/problems/sliding-window-median/description/)。三题均为困难。
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `295. Find Median from Data Stream` | 本地对拍通过，标准高效方案 | 跨堆搬运同时维护有序关系与数量平衡；平均值先转浮点 | 解释两个不变量分别如何成立；“较小/较大一半”允许重复值相等 | [查看](../leetcode-reviews/2026-11-04-295-find-median-from-data-stream.md) |
+| `480. Sliding Window Median` | 本地对拍通过，标准高效方案 | 两个 multiset 支持精确删除过期元素；单副本删除和整数边界处理正确 | 证明同值可任选一侧删；辅助空间 O(k)，输出单独计算 | [查看](../leetcode-reviews/2026-11-04-480-sliding-window-median.md) |
+| `1825. Finding MK Average` | 本地对拍通过，总体复杂度合格 | 三段有序集合配合队列，中段和使用 64 位，查询 O(1) | 首次成窗集中搬移 2k 个数；区分最坏单次与摊还复杂度，检查每次跨中段的加减 | [查看](../leetcode-reviews/2026-11-04-1825-finding-mk-average.md) |
+
+### 通用解题模板
+
+- 适用条件：数据持续变化，但只关心固定排名边界或某个排名区间的统计；允许重复值。295、480、1825 都能用“有序分段 + 调整段大小”解释。
+- 核心骨架：先定义各段目标大小与值域关系；按边界插入，按题意删除过期副本；只跨相邻段搬运边界值恢复大小；最后由边界值或中段总和读取答案。
+- 三个独立检查：①各段大小符合目标；②左段所有值不大于右段所有值；③若维护区间和，缓存必须等于该段实际总和。仅满足数量平衡并不足以证明正确。
+- 结构选择：295 仅追加，两个堆足够；480 需要删除任意旧值，两个 multiset 直接处理；1825 增加第三段及中段求和。不能因为本周主题是堆就强制所有题用堆。
+- 关键边界：重复值按迭代器只删一个；平均值相加前转浮点；总和用 long long；预热期的目标大小要随当前元素数变化；读取边界前确认该段非空。
+- 复杂度：设当前维护 s 个元素，每次插入/删除和常数次边界搬运为 O(log(s+1))，查询 O(1)，空间 O(s)。295 的 s 随数据流增长，480 的 s<=k+1，1825 的 s<=m+1。若单次集中搬移 k 个元素，则该次不能仍记作 O(log s)。
+
+以下仅展示已完成题共用的两段骨架；将其扩展为三段时，为两个外侧分别设目标大小，并对跨中段的搬运记账。
+
+```cpp
+class Solution {
+    void balance(multiset<int>& left, multiset<int>& right) {
+        // 前提：左侧所有值不大于右侧，下面只修复数量。
+        while (left.size() > right.size() + 1) {
+            auto it = prev(left.end());
+            right.insert(*it);
+            left.erase(it);
+        }
+        while (left.size() < right.size()) {
+            auto it = right.begin();
+            left.insert(*it);
+            right.erase(it);
+        }
+    }
+
+public:
+    vector<double> prefixMedians(vector<int>& nums) {
+        multiset<int> left, right;
+        vector<double> result;
+        for (int value : nums) {
+            if (left.empty() || value <= *left.rbegin()) left.insert(value);
+            else right.insert(value);
+            balance(left, right);
+            // 窗口变体在此删除一个过期副本，再调用 balance。
+            if (left.size() > right.size()) result.push_back(*left.rbegin());
+            else result.push_back((static_cast<double>(*left.rbegin())
+                                   + *right.begin()) / 2.0);
+        }
+        return result;
+    }
+};
+```
+
+- 骨架样例：输入 `[1,3,2]`，输出前缀中位数 `[1,2,2]`；从第二个元素的双边界平均，切换到第三个元素的左边界读取。
+- 1825 的推荐预热规则：当前元素数为 s 时，左侧目标为 min(k,s)，右侧目标为 min(k,s-leftTarget)。先缩减超额段，再补足不足段；每轮只搬常数个数，避免首次满窗集中切分。
+
+### 验证与复盘重点
+
+- C++20，开启 AddressSanitizer 与 UndefinedBehaviorSanitizer；295 核对 45,009 个前缀，480 核对 65,716 个窗口，1825 核对 592,403 次更新，原实现与 Opt 版本全部通过。
+- 覆盖重复值、负数、奇偶窗口、k=1、k=n、32 位极值、首次满窗、中段仅一个元素和中段总和超过 int 上限；1825 另枚举长度 8、值域 {1,2,3} 的全部序列与多组合法 m/k。
+- 源码已添加私有 Opt 推荐函数，保留原公开提交入口与原实现。295、480 的推荐版本沿用当前算法；1825 的改进集中在预热阶段，整体总复杂度不变。
+- 今日最值得复盘：为什么只移动边界元素就能保持有序？为什么删除任意一个等值副本仍然正确？为什么 1825 原实现摊还高效，却存在首次成窗的单次尖峰？
+
+### 下一步安排
+
+继续第 6 天原题单，不重排其他日期；今天三道困难题之后，先用旧题回顾热身，再进入核心和拔高。
+
+1. `239. Sliding Window Maximum`（困难，旧题回顾）— 脱离旧代码重新完成，检查窗口变化时能否稳定返回结果。
+2. `1438. Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit`（中等，核心）— 训练约束变化时判断当前区间是否仍然有效。
+3. `218. The Skyline Problem`（困难，拔高）— 整合多个变化来源，处理重合位置和输出边界。
+
+完成后重点复盘：哪些旧状态仍然影响答案，哪些输出位置需要合并。第 4 天的 358 仍保持未确认完成，不影响本次第 5 天记录。

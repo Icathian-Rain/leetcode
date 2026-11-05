@@ -337,3 +337,88 @@ public:
 3. `218. The Skyline Problem`（困难，拔高）— 整合多个变化来源，处理重合位置和输出边界。
 
 完成后重点复盘：哪些旧状态仍然影响答案，哪些输出位置需要合并。第 4 天的 358 仍保持未确认完成，不影响本次第 5 天记录。
+
+## 进度更新 - 2026-11-05
+
+- 今日完成：第 6 天 `239. Sliding Window Maximum`（旧题回顾）、`1438. Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit`、`218. The Skyline Problem`。
+- 完成依据：用户确认三题均已通过测试；本次依照要求，不编译、不运行、不对拍答案。239 沿用已有源码，1438 和 218 为本次新增源码。
+- 当前主题：堆与优先队列；本日完成方式覆盖单调候选维护与事件精确增删。
+- 资料核对（2026-11-05）：[239 官方题目页](https://leetcode.cn/problems/sliding-window-maximum/description/)、[1438 官方题目页](https://leetcode.cn/problems/longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit/)、[218 官方题目页](https://leetcode.cn/problems/the-skyline-problem/)；仅用于题意、难度和约束校准。
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `239. Sliding Window Maximum` | 通过（用户确认），旧题回顾 | 值队列维护候选，保留重复副本，时间 O(n) | 值队列的严格 `<` 与下标队列的 `<=` 不能直接混用；解释按值移除为什么成立 | [查看](../leetcode-reviews/2026-11-05-239-sliding-window-maximum.md) |
+| `1438. Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit` | 通过（用户确认），最优级方案 | 将任意两数差化简为极差，双队列配合连续收缩，时间 O(n) | 每次恢复合法后更新答案；两个队列的下标过期与同值处理；最坏辅助空间 O(n) | [查看](../leetcode-reviews/2026-11-05-1438-longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit.md) |
+| `218. The Skyline Problem` | 通过（用户确认），标准高效方案 | 同坐标事件分组、同高副本精确删除、地面哨兵与等高输出合并均到位 | 被遮住的低建筑仍可能恢复为最高；同一横坐标整组更新后才读答案，时间 O(n log n) | [查看](../leetcode-reviews/2026-11-05-218-the-skyline-problem.md) |
+
+### 通用解题模板
+
+本节提炼 239 与 1438 共用的单调队列模式。
+
+- 适用条件：窗口边界只向右移动，需要持续读取最大值、最小值或二者；较晚进入的候选不会比旧候选更早过期。
+- 核心骨架：队列保存下标；队首先清理过期位置，队尾淘汰被新元素支配的候选；插入新下标后，由队首读取极值。239 的左边界由固定长度确定，1438 的左边界由合法性条件决定。
+- 正确性依据：以最大值为例，若新值不小于旧候选，且新值更晚过期，则只要旧值仍有效，新值必然也有效且至少同样好，旧候选可以永久丢弃。最小值方向反转。
+- 关键边界：下标必须仍在窗口内；值队列需要保留重复副本，下标队列可保留更新的同值候选；变长窗口必须收缩到合法再更新答案；空队列时不读取队首。
+- 复杂度：每个下标在每条队列中至多进出一次，总时间 O(n)，辅助空间 O(w)，w 为维护中的最大窗口长度；固定窗口为 O(k)，1438 最坏为 O(n)。单次更新可能连续弹出多个候选，线性结论来自摊还分析。
+
+```cpp
+class Solution {
+    void updateCandidates(deque<int>& candidates, const vector<int>& nums,
+                          int index, int left, bool wantMax) {
+        while (!candidates.empty() && candidates.front() < left) {
+            candidates.pop_front();
+        }
+        // 下标写法允许淘汰旧同值，因为新下标更晚过期。
+        while (!candidates.empty()
+               && (wantMax ? nums[candidates.back()] <= nums[index]
+                           : nums[candidates.back()] >= nums[index])) {
+            candidates.pop_back();
+        }
+        candidates.push_back(index);
+    }
+
+public:
+    // 示例接口：返回每个固定窗口的 {最小值, 最大值}，前提 1<=k<=n。
+    vector<pair<int, int>> windowExtremes(vector<int>& nums, int k) {
+        deque<int> minIndexes, maxIndexes;
+        vector<pair<int, int>> result;
+        for (int right = 0; right < static_cast<int>(nums.size()); ++right) {
+            int left = max(0, right - k + 1);
+            updateCandidates(minIndexes, nums, right, left, false);
+            updateCandidates(maxIndexes, nums, right, left, true);
+            if (right >= k - 1) {
+                result.push_back({nums[minIndexes.front()], nums[maxIndexes.front()]});
+            }
+        }
+        return result;
+    }
+};
+```
+
+- 骨架样例：nums=`[2,2,1]`、k=`2`，依次得到 `{2,2}`、`{1,2}`。第二个 2 可代替第一个 2，因为它更晚过期。
+- 迁移到 1438：维护可变 left；极差超限时持续递增 left，同步移除两条队列中过期的队首，合法后记录长度。不能只改变 left 而忘记更新候选有效性。
+- 218 的区别：较高建筑可能更早结束，被遮住的低建筑仍需保留。它不满足“更优候选一定更晚过期”的支配条件，因此使用有效高度集合，按结束事件精确删除。
+
+### 当天复盘重点
+
+1. **支配关系与有效期一起考虑。** 239、1438 可以永久淘汰被支配候选；218 中仅凭高度不足以淘汰建筑。
+2. **重复值规则依赖状态定义。** 239 用户队列存值，必须保留相等副本；1438 存下标，保留全部同值或只保留新下标都成立；218 则需保留同高建筑的计数。
+3. **先达到可读状态，再记录答案。** 239 先形成窗口，1438 先恢复合法，218 先处理完整个横坐标事件组。
+4. **复杂度已达标，接下来练证明与取舍。** 239、1438 为 O(n)，218 为 O(n log n)；没有必要仅因本周主题而更换当前结构。
+
+- 源码同步：239 复用已有 maxSlidingWindowOpt，源码未改；1438、218 新增私有 Opt 函数。原公开实现保留，推荐版本未运行验证。
+- 本次检查范围：文档内容与链接、改动范围及格式；通过状态来源于用户确认。
+
+### 下一步安排
+
+进入第 7 天既定题单，沿用“热身 + 核心 + 拔高”节奏；658 是已练旧题，本次用于方案取舍回顾。
+
+1. `658. Find K Closest Elements`（中等，旧题热身）— 比较不同实现的适用前提，明确距离相同时的结果规则。
+2. `451. Sort Characters By Frequency`（中等，核心）— 理解输出分组要求与多种合法答案的边界。
+3. `895. Maximum Frequency Stack`（困难，拔高）— 综合处理连续操作下的主次优先级要求。
+
+题目信息核对：[658 官方页](https://leetcode.cn/problems/find-k-closest-elements/)、[451 官方页](https://leetcode.cn/problems/sort-characters-by-frequency/)、[895 国际版官方页](https://leetcode.com/problems/maximum-frequency-stack/description/)（中国版本次访问受限），查询日期 2026-11-05。
+
+完成后重点复盘：选择方案的依据、并列条件下的行为以及每次操作的开销。第 4 天 358 继续保留未确认完成状态；完成第 7 天后再单独回看缺项。

@@ -422,3 +422,82 @@ public:
 题目信息核对：[658 官方页](https://leetcode.cn/problems/find-k-closest-elements/)、[451 官方页](https://leetcode.cn/problems/sort-characters-by-frequency/)、[895 国际版官方页](https://leetcode.com/problems/maximum-frequency-stack/description/)（中国版本次访问受限），查询日期 2026-11-05。
 
 完成后重点复盘：选择方案的依据、并列条件下的行为以及每次操作的开销。第 4 天 358 继续保留未确认完成状态；完成第 7 天后再单独回看缺项。
+
+## 进度更新 - 2026-11-06
+
+- 今日完成：第 7 天 `451. Sort Characters By Frequency`、`895. Maximum Frequency Stack`。
+- 完成依据：两份新增源码与第 7 天核心、拔高题一致，用户确认均已通过 LeetCode 测试。本次未编译、运行、对拍或重新核验提交结果。
+- 当前主题：堆与优先队列；本日收尾重点为静态与动态频次优先级的方案取舍。
+- 资料依据：本地源码与本计划 2026-11-05 的题目信息及官方链接记录；本次未联网校准。官方链接：[451](https://leetcode.cn/problems/sort-characters-by-frequency/)、[895](https://leetcode.com/problems/maximum-frequency-stack/description/)。
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `451. Sort Characters By Frequency` | 通过（用户确认），线性时间方案 | 排序固定 128 个计数项，按字符整段输出，同频规则处理正确 | 时间是 O(n)，原写法的临时字符段仍会占 O(n) 辅助空间；明确字符范围前提 | [查看](../leetcode-reviews/2026-11-06-451-sort-characters-by-frequency.md) |
+| `895. Maximum Frequency Stack` | 通过（用户确认），标准最优级方案 | 频次层表示主优先级，层内栈自然表达最近顺序，push/pop 平均常数时间 | group 保存到达该层的历史事件，降频不重新入层；区分有效记录和历史键空间 | [查看](../leetcode-reviews/2026-11-06-895-maximum-frequency-stack.md) |
+
+### 通用解题模板
+
+两题可迁移的共同点是“计数确定整数优先级，再按频次组织候选”。451 当前使用固定字符集排序，也可用频次桶；895 将频次层动态维护为栈。共同的是分层建模，层内状态的含义必须分别定义。
+
+- 适用条件：主优先级为出现次数，频次是有界正整数；需要按频次取候选，或按频次输出分组。
+- 核心骨架：统计或更新 freq；按频次定位相应层；从高层向低层读结果；组内顺序独立遵循题目要求。静态输入可一次建层，动态操作要维护最高非空层。
+- 关键边界：同频顺序是否自由；零频项是否排除；空层何时跳过；每层保存当前成员还是历史事件。451 同频顺序自由，895 必须保留事件顺序，不能在降频后重新压入低层。
+- 复杂度：静态桶骨架时间 O(n+d)，辅助空间 O(n+d)，d 为不同值数；895 动态维护平均常数操作、累计 P 次 push 的空间上界 O(P)。451 当前固定字符集排序同样为 O(n)，辅助空间还可更紧凑，不必替换为桶。
+
+下面是静态频次分层骨架，输出不同值的频次降序，层内顺序不限；只展示共同建模，不直接代替 895 的动态事件栈。
+
+```cpp
+class Solution {
+    vector<vector<int>> buildFrequencyLayers(const vector<int>& values) {
+        unordered_map<int, int> freq;
+        for (int value : values) {
+            ++freq[value];
+        }
+        vector<vector<int>> layers(values.size() + 1);
+        for (const auto& [value, count] : freq) {
+            layers[count].push_back(value);
+        }
+        return layers;
+    }
+
+public:
+    vector<int> valuesByFrequency(const vector<int>& values) {
+        auto layers = buildFrequencyLayers(values);
+        vector<int> result;
+        // 主优先级由层号表达；本接口对同层顺序没有要求。
+        for (size_t count = layers.size() - 1; count > 0; --count) {
+            for (int value : layers[count]) {
+                result.push_back(value);
+            }
+        }
+        return result;
+    }
+};
+```
+
+- 骨架样例：输入 `[5,7,5,4]`，输出可以为 `[5,7,4]` 或 `[5,4,7]`。若输出原元素全量结果，则每个值按频次重复输出；451 对应字符整段追加。
+- 动态迁移：895 每次 push 只把值压到新的频次层，低层旧记录保留；pop 从最高层撤销一条事件，空层后最高频次减一。不能把上面静态桶理解为可直接动态搬移的互斥成员分组。
+
+### 当天复盘重点
+
+1. **先看优先级取值范围，再选择结构。** 451 排序的是固定字符集，已经线性；895 的频次每次只变化一，直接维护层号与层内顺序，比通用比较堆更合适。
+2. **同频规则决定层内结构。** 451 同频可任意排序；895 要求最近者优先，栈恰好保存到达对应频次的时间顺序。
+3. **保留历史状态要有解释。** 895 较低层记录用于恢复旧顺序，不能删掉，也不能降频后重新入栈。总有效记录恰好等于当前未弹出元素数。
+4. **复杂度口径要完整。** 451 原实现的临时字符串计入辅助空间；895 的 O(1) 依赖哈希平均复杂度，原实现保留的零频键和空层与历史操作有关。
+
+- 源码同步：451 新增私有 `frequencySortOpt`；895 新增私有 `pushOpt`、`popOpt`，共用原状态。两题原公开提交实现保持不变。
+- 推荐版本：451 预留答案容量并直接 append；895 可选清理零频键和空层。均无渐近时间改进，原算法已达标；本次未运行推荐代码。
+
+### 收尾与下一步安排
+
+- 第 7 天核心与拔高已完成。658 此前已有完成记录，今天没有新增重做依据，不记为本日完成。
+- 第 2 天 347 尚未记录本周复做，第 4 天 358 继续保持未确认完成；保留原题单与历史记录，不将本周标记为全题完成。
+- 后续可沿用已存在的[第 10 周区间与贪心计划](week-10-intervals-and-greedy.md)，不重排原计划；第 1 天依次为：
+
+1. `56. Merge Intervals`（中等，基础）— 准确描述哪些区间应归为同一个结果，处理重叠和相接边界。
+2. `57. Insert Interval`（中等，核心）— 在已有结果中加入一个新区间，完整处理不同位置关系。
+3. `986. Interval List Intersections`（中等，旧题迁移回顾）— 重新完成两个区间列表的交集，说明端点相等时的输出规则。
+
+进入下一主题前，优先口述 895 的三点证明：低层记录为什么保留、弹出后为什么不重新入层、最高层空了为什么只需减一。

@@ -9,8 +9,9 @@
 - `src/`: LeetCode 题解文件，通常每题一个 `.cpp`。
 - `template/`: 本地调试模板和示例。
 - `leetcode-plans/`: 分周训练计划。
-- `.codex/skills/leetcode-weekly-coach/`: 项目本地 Codex skill，用于生成周计划、每日题单和题解点评。
-- `Agents.md`: 给 Codex 或其他协作代理看的项目规则。
+- `.agents/skills/leetcode-weekly-coach/`: 项目共享 skill，用于生成周计划、每日题单和题解点评，是技能内容的唯一来源。
+- `.codex/skills/`、`.claude/skills/`: 通过相对符号链接引用共享 skill 的代理兼容入口。
+- `AGENTS.md`: 给 Codex 或其他协作代理看的项目规则。
 - `header.h`: 常用数据结构、打印函数、计时器和本地测试辅助工具。
 
 本地生成物和编辑器缓存会被 `.gitignore` 排除，例如 `.vscode/`、`src/.lcpr_data/`、`*.exe`。
@@ -35,13 +36,13 @@ g++ -std=c++20 -DLOCAL template/template.cpp -o template/template.exe
 
 生成的 `.exe` 文件不需要提交。
 
-## Codex Skill
+## 共享 Skill
 
 本项目包含一个只服务于当前仓库的 skill：
 
 - `$leetcode-weekly-coach`: 按主题制定 LeetCode 周计划、延续每日题单，并在提交题解后生成中文 Markdown 点评。
 
-相关文件位于 `.codex/skills/leetcode-weekly-coach/`。如果修改训练路线或输出模板，优先更新该目录下的 `references/` 文件。
+相关文件位于 `.agents/skills/leetcode-weekly-coach/`。如果修改训练路线或输出模板，优先更新该目录下的 `references/` 文件。`.codex/skills/` 和 `.claude/skills/` 中的同名入口均通过相对符号链接引用该目录，无需维护多份内容。
 
 ## Git 建议
 

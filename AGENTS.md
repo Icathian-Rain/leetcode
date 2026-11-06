@@ -13,8 +13,8 @@
 - `src/`: LeetCode 题解文件。每道题通常对应一个 `.cpp` 文件。
 - `template/`: 本地调试模板和示例代码。
 - `leetcode-plans/`: 每周训练计划、复盘和题单。
-- `.codex/skills/`: 仅适用于本项目的 Codex skills，例如 LeetCode 周计划教练。这是 skill 的唯一内容来源。
-- `.claude/skills/`: Claude Code 的 skill 发现目录，其中的条目以符号链接指向 `.codex/skills/` 下的同名目录，不单独维护内容。
+- `.agents/skills/`: 项目共享 skills，例如 LeetCode 周计划教练。这是 skill 的唯一内容来源。
+- `.codex/skills/`、`.claude/skills/`: 各代理的 skill 兼容入口，其中的条目以相对符号链接指向 `.agents/skills/` 下的同名目录，不单独维护内容。
 - `header.h`: 常用头文件、数据结构、打印工具和本地测试辅助函数。
 - `.vscode/`、`src/.lcpr_data/`、`*.exe`: 本地配置或生成物，不应纳入版本控制。
 

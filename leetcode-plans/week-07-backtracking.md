@@ -4,7 +4,7 @@
 
 把第 6 周树题里的“函数返回什么”继续推进成“当前选择到哪里、路径里有什么、什么时候撤销”。到本周结束时，你应该能在枚举类题目中先画出决策过程，再写出稳定的递归入口、终止条件、选择推进和现场恢复；面对重复元素、字符串切分、棋盘约束和网格搜索时，也能说清楚哪些分支不需要继续探索。
 
-资料校准：默认主题顺序与核心题池参考 `.codex/skills/leetcode-weekly-coach/references/topic-ladders.md`；题号、英文题名、难度和标签参考 LeetCode 官方题目页，校准日期为 2026-06-03。已校准代表题包括 `78. Subsets`、`17. Letter Combinations of a Phone Number`、`39. Combination Sum`、`46. Permutations`、`79. Word Search`、`131. Palindrome Partitioning`、`40. Combination Sum II`、`51. N-Queens` 等。
+资料校准：默认主题顺序与核心题池参考 `.agents/skills/leetcode-weekly-coach/references/topic-ladders.md`；题号、英文题名、难度和标签参考 LeetCode 官方题目页，校准日期为 2026-06-03。已校准代表题包括 `78. Subsets`、`17. Letter Combinations of a Phone Number`、`39. Combination Sum`、`46. Permutations`、`79. Word Search`、`131. Palindrome Partitioning`、`40. Combination Sum II`、`51. N-Queens` 等。
 
 ## 与第 6 周衔接
 

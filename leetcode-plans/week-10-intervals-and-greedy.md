@@ -135,3 +135,60 @@ public:
 3. `1288. Remove Covered Intervals`（中等）— 练习区分完全包含与部分相交，准确统计保留数量。
 
 完成后重点复盘：每道题的目标与今日“合并覆盖范围”有何不同，自己的每次选择为何不会损失更好的答案。
+
+## 进度更新 - 2026-11-10
+
+- 今日完成：`435. Non-overlapping Intervals`、`452. Minimum Number of Arrows to Burst Balloons`、`1288. Remove Covered Intervals`，均按用户确认记录为已测试通过。
+- 当前主题：第 10 周第 2 天，区间选择与删除；三题均达到常用最优复杂度，没有发现需要修复的正确性问题。
+- 依据：今日新增源码、已有计划、用户通过确认。2026-11-10 检索 [435 官方摘要](https://leetcode.cn/problems/non-overlapping-intervals/)、[452 官方摘要](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/) 与 [1288 官方摘要](https://leetcode.cn/problems/remove-covered-intervals/)，确认难度、约束与端点语义（435 端点接触不算重叠；452 闭区间相切算引爆且坐标可达 int 极限）。
+
+### 通用解题模板
+
+- 适用条件：区间之间需要做“保留/丢弃/分组”决策，且决策只依赖一个随扫描单调推进的边界值。排序后每个新区间只与这个边界比较一次，无需回退。
+- 核心骨架：选定排序键（左端点或右端点，取决于哪一端决定“安全”），一趟扫描维护一个边界变量；新区间越过边界时计数并推进边界，否则按题意收缩边界或直接跳过。
+- 关键边界：比较符由端点语义决定——端点相接算重叠时用 `>` 判新组，不算重叠时用 `>=`；同起点排序时按另一端降序可让长区间先出现；比较器只用 `<`，避免极端坐标相减溢出；首区间直接计入答案，依赖 `n >= 1` 的约束。
+- 复杂度：时间 `O(n log n)`，空间 `O(log n)`（排序栈，不计输入）。
+
+```cpp
+class Solution {
+public:
+    // 前提：按题意选定排序键与比较符；boundary 的含义由排序方向决定。
+    int intervalScanExample(vector<vector<int>>& intervals) {
+        sort(intervals.begin(), intervals.end(), [](const vector<int>& a, const vector<int>& b) {
+            return a[1] < b[1]; // 以右端点为例；比较器只用 <，防溢出
+        });
+        int ans = 1;
+        int boundary = intervals[0][1]; // 当前决策边界，随扫描单调推进
+        for (int i = 1; i < static_cast<int>(intervals.size()); i++) {
+            if (intervals[i][0] >= boundary) { // 比较符按端点语义调整
+                ans++;
+                boundary = intervals[i][1];
+            }
+        }
+        return ans;
+    }
+};
+```
+
+该骨架概括今日三题的共同形态：435 与 452 直接同构（只差一个比较符），1288 把边界换成“历史最大右端点”并统计被覆盖对象。
+
+### 逐题评价
+
+| 题目 | 完成质量 | 亮点 | 风险或复盘重点 | 详细点评 |
+| --- | --- | --- | --- | --- |
+| `435. Non-overlapping Intervals` | 已通过；常用最优级 | 同一文件写出左端点、右端点两种等价视角，冲突时的 `min` 修正正确 | 口头证明“右端点排序下首区间必属某个最优解”；迁移时注意 `n >= 1` 假设 | [查看](../leetcode-reviews/2026-11-10-435-non-overlapping-intervals.md) |
+| `452. Minimum Number of Arrows to Burst Balloons` | 已通过；常用最优级 | 默认排序天然避开 int 极限溢出；维护公共交集的语义直观 | 与 435 推荐视角同构后只需维护“箭位置”单变量，减少每轮状态写入 | [查看](../leetcode-reviews/2026-11-10-452-minimum-number-of-arrows-to-burst-balloons.md) |
+| `1288. Remove Covered Intervals` | 已通过；常用最优级 | 同起点右端点降序处理正确；单条件覆盖判定简洁 | 变量 `l` 从未被读取，`r` 实为历史最大右端点；想清“右端点为何要降序” | [查看](../leetcode-reviews/2026-11-10-1288-remove-covered-intervals.md) |
+
+- 暴露问题：三题均正确，主要提升点在表述层——状态命名与真实使用方式一致（1288 的 `l`）、能主动为每种排序写一句安全性理由。
+- 代码同步：已在三个源码中新增私有参考函数 `eraseOverlapIntervalsOpt`、`findMinArrowShotsOpt`、`removeCoveredIntervalsOpt`，保留原公开解法；新增函数均通过 C++20 编译检查，通过状态仍以用户对原题解的确认为依据。
+
+### 下一步安排
+
+第 2 天题单全部完成，进入第 3 天原题单，主题从区间之间的选择迁移到边界推进。
+
+1. `55. Jump Game`（中等）— 练习维护目前能到达的最远边界。
+2. `45. Jump Game II`（中等）— 练习在可达范围内决定何时增加一次行动。
+3. `1326. Minimum Number of Taps to Open to Water a Garden`（困难）— 练习把覆盖范围转成逐段推进问题；若困难题节奏不适，可先巩固前两题。
+
+完成后重点复盘：今天的“排序后维护边界”与第 3 天的“逐步推进边界”在不变量上有何联系，以及每次扩张边界时能否写一句不损失最优性的理由。

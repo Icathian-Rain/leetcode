@@ -65,13 +65,13 @@ struct TreeNode {
     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
 };
 
-struct Node {
-    int val;
-    vector<Node*> children;
-    Node() : val(0) {}
-    Node(int x) : val(x) {}
-    Node(int x, vector<Node*> _children) : val(x), children(_children) {}
-};
+// struct Node {
+//     int val;
+//     vector<Node*> children;
+//     Node() : val(0) {}
+//     Node(int x) : val(x) {}
+//     Node(int x, vector<Node*> _children) : val(x), children(_children) {}
+// };
 
 struct RandomListNode {
     int val;

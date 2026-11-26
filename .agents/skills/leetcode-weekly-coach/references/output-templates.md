@@ -2,6 +2,8 @@
 
 生成周计划、更新周计划或单题点评时使用这些模板。整体语气保持简洁、具体、鼓励式。
 
+C++ 代码结构、语言标准与本地测试写法统一遵循仓库根目录的刷题助手规范 `template/leetcode-assistant-spec.md`（2026-11-26 版）：默认 C++17、`#include "../header.h"`、算法区纯净可独立提交、`#ifdef LOCAL` 包裹本地测试。
+
 ## 周计划模板
 
 ```md
@@ -229,7 +231,7 @@ public:
 - 日期：<YYYY-MM-DD>
 - 主题：<所属主题或适用题型>
 - 目标：<这份模板主要解决什么问题>
-- 适用语言：<C++20 / 用户指定语言>
+- 适用语言：<C++17 / 用户指定语言>
 - 文档路径：<目标 Markdown 路径或 仅聊天输出>
 - 测试代码路径：<目标代码路径或 未生成>
 
@@ -304,11 +306,11 @@ public:
 
 ## 算法模板测试代码模板
 
-当用户要求把模板“写入文件”时，除了 Markdown 文档，还要生成一个可编译运行的测试代码文件。
+当用户要求把模板“写入文件”时，除了 Markdown 文档，还要生成一个可编译运行的测试代码文件。结构遵循 `template/leetcode-assistant-spec.md`：使用 `../header.h`（视文件相对位置调整路径）、复用其工具接口、本地测试区用 `#ifdef LOCAL` 包裹。独立模板不属于某道具体题目时，lcpr 元数据与 `@lcpr case` 用例注释可省略，其余结构不变。
 
 ````cpp
-#include <bits/stdc++.h>
-using namespace std;
+// 独立算法模板测试文件：复用仓库 header.h 的工具接口
+#include "header.h"   // 相对路径按文件实际位置调整，如 ../header.h
 
 class Solution {
 private:
@@ -328,26 +330,36 @@ public:
     }
 };
 
+#ifdef LOCAL
 int main() {
     Solution solution;
 
     vector<int> sample1 = {/* 样例 1 输入 */};
-    cout << solution.templateExample(sample1) << '\n'; // 期望输出：...
+    cout << "sample1: ";
+    print(solution.templateExample(sample1)); // 期望输出：...
 
     vector<int> sample2 = {/* 样例 2 输入 */};
-    cout << solution.templateVariant(sample2, /* target */ 0) << '\n'; // 期望输出：...
+    cout << "sample2: ";
+    print(solution.templateVariant(sample2, /* target */ 0)); // 期望输出：...
 
     return 0;
 }
+#endif
 ````
 
-推荐同步形式：
+编译运行命令（规范统一口径）：
+
+```bash
+g++ -std=c++17 <file>.cpp -o <file>.exe && ./<file>.exe
+```
+
+推荐同步形式（题解点评中的 `Opt` 函数同步，遵循单题点评规则）：
 
 ```cpp
 class Solution {
     int removeDuplicatesOpt(vector<int>& nums) {
         // 中文注释说明最优解的关键不变量或边界处理
-        // 最优解实现
+        // 最优解实现（默认 C++17 写法）
     }
 
 public:
@@ -371,7 +383,8 @@ public:
 
 - 标题、说明、评价、建议、总结全部使用简体中文。
 - 题目名可以保留 LeetCode 官方英文标题，必要时补一句中文说明。
-- 最优解代码使用 C++20 和 LeetCode `class Solution` 提交格式。
+- 最优解代码默认 C++17（与 `template/leetcode-assistant-spec.md` 对齐），使用 LeetCode `class Solution` 提交格式；不使用超出 C++17 的语言特性。
+- 模板与测试代码的文件结构（lcpr 元数据、`@lcpr-template-start/end`、`@lc code` 区纯净性、`#ifdef LOCAL` 包 main、`@lcpr case` 注释）一律遵循刷题助手规范。
 - 周计划和下一题题单不得透露具体算法名称、数据结构名称、关键不变量或解题技巧；这些内容只在点评或用户明确要求提示时出现。
 - 只有当用户明确要求其他语言时，才切换输出语言。
 

@@ -18,7 +18,7 @@
 #include <iomanip>
 #include <sstream>
 #include <bitset>
-#include <bit>
+#include <type_traits>
 
 using namespace std;
 using namespace std::chrono;
@@ -97,6 +97,11 @@ void printValue(const pair<T1, T2>& p) {
     cout << "(" << p.first << ", " << p.second << ")";
 }
 
+// 重载：打印 string 集合元素（加引号，非模板重载优先于模板）
+void printValue(const string& val) {
+    cout << "\"" << val << "\"";
+}
+
 // 打印 pair（带换行版本）
 template<typename T1, typename T2>
 void print(const pair<T1, T2>& p) {
@@ -109,11 +114,7 @@ template<typename T>
 void print(const vector<T>& vec) {
     cout << "[";
     for (size_t i = 0; i < vec.size(); ++i) {
-        if constexpr (is_same_v<T, string>) {
-            cout << "\"" << vec[i] << "\"";
-        } else {
-            printValue(vec[i]);
-        }
+        printValue(vec[i]);
         if (i < vec.size() - 1) cout << ", ";
     }
     cout << "]" << endl;
